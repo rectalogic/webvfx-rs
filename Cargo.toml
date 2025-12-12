@@ -1,0 +1,16 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/webvfx",
+    "crates/webvfx_filter",
+    "crates/webvfx_mixer2",
+    "crates/webvfx_mixer3",
+    "crates/webvfx_source",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/rectalogic/webvfx-rs"
+readme = "README.md"
