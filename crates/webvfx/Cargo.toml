@@ -5,8 +5,12 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+frei0r-rs2 = { git = "https://github.com/rectalogic/frei0r-rs.git", tag = "2.3.0" }
 anyrender = "0.6.2"
 anyrender_vello = "0.6.1"
 blitz = "0.2.1"
-parley = "0.6.0"  # Required to workaround https://github.com/DioxusLabs/blitz/issues/301
-frei0r-rs2 = { git = "https://github.com/rectalogic/frei0r-rs.git", tag = "2.3.0" }
+
+# Indirect dependencies, specify these with default features since blitz doesn't expose feature flags
+# https://github.com/DioxusLabs/blitz/issues/301
+blitz-dom = "*"
+blitz-paint = "*"

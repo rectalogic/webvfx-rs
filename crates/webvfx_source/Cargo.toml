@@ -1,8 +1,11 @@
 [package]
-name = "webvfx_wource"
+name = "webvfx_source"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
 webvfx = { path = "../webvfx" }
+
+[profile.release]
+lto = true
