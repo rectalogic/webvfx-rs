@@ -14,3 +14,7 @@ blitz = "0.2.1"
 # https://github.com/DioxusLabs/blitz/issues/301
 blitz-dom = "*"
 blitz-paint = "*"
+
+[dev-dependencies]
+image = "0.25.6"  # Required by blitz-dom
+testdir = "0.9.3"

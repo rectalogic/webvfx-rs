@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 mod plugin;
-mod render;
+mod renderer;
 
 pub use frei0r_rs2;
 pub use plugin::{
