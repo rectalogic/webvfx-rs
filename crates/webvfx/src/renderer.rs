@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use std::{path::Path, sync::Arc};
+use std::sync::Arc;
 
 use anyrender::{ImageRenderer, PaintScene};
 use anyrender_vello::VelloImageRenderer;
@@ -109,15 +109,35 @@ impl<const S: usize> WebVfxRenderer<S> {
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     use super::*;
     use image::{ImageReader, RgbaImage};
     use testdir::testdir;
+
+    const WIDTH: u32 = 320;
+    const HEIGHT: u32 = 240;
+
+    macro_rules! testdata {
+        () => {
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata")
+        };
+    }
 
     fn read_image(path: &Path) -> Vec<u8> {
         match ImageReader::open(path).unwrap().decode().unwrap() {
             image::DynamicImage::ImageRgba8(image_buffer) => image_buffer.into_vec(),
             _ => panic!("image not rgba8"),
         }
+    }
+
+    fn init_renderer<const S: usize>(html_file: &str) -> (WebVfxRenderer<S>, RgbaImage) {
+        let html_path = testdata!().join(html_file);
+        let html = std::fs::read_to_string(&html_path).unwrap();
+        let url = Url::from_file_path(html_path.as_path()).unwrap();
+        let renderer = WebVfxRenderer::<S>::new(&url, &html, WIDTH, HEIGHT);
+        let output = RgbaImage::new(WIDTH, HEIGHT);
+        (renderer, output)
     }
 
     fn render<const S: usize>(
@@ -154,36 +174,75 @@ mod tests {
     }
 
     #[test]
-    fn test_filter() {
-        const WIDTH: u32 = 320;
-        const HEIGHT: u32 = 240;
-        let testdata = Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata");
-        let html_path = testdata.join("filter.html");
-        let html = std::fs::read_to_string(&html_path).unwrap();
-        let url = Url::from_file_path(html_path.as_path()).unwrap();
-        let mut r = WebVfxRenderer::<1>::new(&url, &html, WIDTH, HEIGHT);
-        let mut output = RgbaImage::new(WIDTH, HEIGHT);
-
+    fn test_source() {
+        let (mut r, mut output) = init_renderer::<0>("source.html");
         render(
             0.0,
             &mut r,
-            [&testdata.join("a-320x240.png")],
+            [],
             &mut output,
-            &testdata.join("filter-1.png"),
+            &testdata!().join("source-1.png"),
+        );
+    }
+
+    #[test]
+    fn test_filter() {
+        let (mut r, mut output) = init_renderer::<1>("filter.html");
+        render(
+            0.0,
+            &mut r,
+            [&testdata!().join("a-320x240.png")],
+            &mut output,
+            &testdata!().join("filter-1.png"),
         );
         render(
             1.0,
             &mut r,
-            [&testdata.join("b-320x240.png")],
+            [&testdata!().join("b-320x240.png")],
             &mut output,
-            &testdata.join("filter-2.png"),
+            &testdata!().join("filter-2.png"),
         );
         render(
             2.0,
             &mut r,
-            [&testdata.join("a-320x240.png")],
+            [&testdata!().join("a-320x240.png")],
             &mut output,
-            &testdata.join("filter-3.png"),
+            &testdata!().join("filter-3.png"),
+        );
+    }
+
+    #[test]
+    fn test_mixer2() {
+        let (mut r, mut output) = init_renderer::<2>("mixer2.html");
+        render(
+            0.0,
+            &mut r,
+            [
+                &testdata!().join("a-320x240.png"),
+                &testdata!().join("b-320x240.png"),
+            ],
+            &mut output,
+            &testdata!().join("mixer2-1.png"),
+        );
+        render(
+            1.0,
+            &mut r,
+            [
+                &testdata!().join("b-320x240.png"),
+                &testdata!().join("a-320x240.png"),
+            ],
+            &mut output,
+            &testdata!().join("mixer2-2.png"),
+        );
+        render(
+            2.0,
+            &mut r,
+            [
+                &testdata!().join("a-320x240.png"),
+                &testdata!().join("b-320x240.png"),
+            ],
+            &mut output,
+            &testdata!().join("mixer2-3.png"),
         );
     }
 }
