@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+anyhow = "1.0.100"
 frei0r-rs2 = { git = "https://github.com/rectalogic/frei0r-rs.git", tag = "2.3.0" }
 anyrender = "0.6.2"
 anyrender_vello = "0.6.1"
@@ -16,5 +17,5 @@ blitz-dom = "*"
 blitz-paint = "*"
 
 [dev-dependencies]
-image = "0.25.6"  # Required by blitz-dom
+image = "0.25"  # Required by blitz-dom
 testdir = "0.9.3"

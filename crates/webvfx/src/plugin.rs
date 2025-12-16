@@ -6,10 +6,10 @@ use std::{
     marker::PhantomData,
 };
 
-pub(crate) mod filter;
-pub(crate) mod mixer2;
-pub(crate) mod mixer3;
-pub(crate) mod source;
+pub mod filter;
+pub mod mixer2;
+pub mod mixer3;
+pub mod source;
 
 pub struct WebVfxPlugin<K: frei0r_rs2::PluginKind, const S: usize> {
     url: CString,

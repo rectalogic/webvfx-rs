@@ -26,89 +26,10 @@ use blitz::{
     },
 };
 
+pub mod processor;
+
 // Node ID mapped to a pair of video frame buffers
 type VideoNode = (usize, [Arc<Vec<u8>>; 2]);
-
-struct RenderJob<const S: usize> {
-    time: f64,
-    inputs: [(*const u8, usize); S],
-    output: (*mut u8, usize),
-}
-
-// SAFETY: The caller guarantees:
-// 1. input and output references remain valid until done_tx signals completion
-// 2. No other thread accesses output during processing
-unsafe impl<const S: usize> Send for RenderJob<S> {}
-
-impl<const S: usize> RenderJob<S> {
-    fn new(time: f64, inputs: [&[u32]; S], output: &mut [u32]) -> Self {
-        let inputs: [(*const u8, usize); S] = inputs
-            .into_iter()
-            .map(|input| (input.as_ptr().cast::<u8>(), size_of_val(input)))
-            .collect::<Vec<(*const u8, usize)>>()
-            .try_into()
-            .unwrap();
-        Self {
-            time,
-            inputs,
-            output: (output.as_mut_ptr().cast::<u8>(), size_of_val(output)),
-        }
-    }
-}
-
-pub struct RenderProcessor<const S: usize> {
-    job_tx: Sender<RenderJob<S>>,
-    job_done_rx: Receiver<()>,
-    worker: JoinHandle<()>,
-}
-
-impl<const S: usize> RenderProcessor<S> {
-    pub fn new(
-        html_path: impl AsRef<Path>,
-        width: u32,
-        height: u32,
-    ) -> Result<Self, Box<dyn Error>> {
-        let (job_tx, job_rx) = channel::<RenderJob<S>>();
-        let (job_done_tx, job_done_rx) = channel::<()>();
-        let html = std::fs::read_to_string(html_path.as_ref())?;
-        let url =
-            Url::from_file_path(html_path.as_ref()).map_err(|_| "WebVfx: path must be absolute")?;
-
-        let worker = thread::spawn(move || {
-            let mut renderer = WebVfxRenderer::<S>::new(&url, &html, width, height);
-            while let Ok(job) = job_rx.recv() {
-                let inputs: [&[u8]; S] = job
-                    .inputs
-                    .into_iter()
-                    .map(|(input_ptr, input_len)| unsafe {
-                        std::slice::from_raw_parts(input_ptr, input_len)
-                    })
-                    .collect::<Vec<&[u8]>>()
-                    .try_into()
-                    .unwrap();
-                let output = unsafe { std::slice::from_raw_parts_mut(job.output.0, job.output.1) };
-
-                renderer.update(job.time, inputs, output);
-
-                if job_done_tx.send(()).is_err() {
-                    return;
-                }
-            }
-        });
-
-        Ok(Self {
-            job_tx,
-            job_done_rx,
-            worker,
-        })
-    }
-
-    pub fn update(&self, time: f64, inputs: [&[u32]; S], output: &mut [u32]) {
-        let job = RenderJob::new(time, inputs, output);
-        self.job_tx.send(job).expect("Worker thread died"); //XXX error handling
-        self.job_done_rx.recv().expect("Worker thread died");
-    }
-}
 
 struct WebVfxRenderer<const S: usize> {
     width: u32,
