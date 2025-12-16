@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use std::{
-    error::Error,
     path::Path,
     sync::mpsc::{Receiver, Sender, channel},
     thread::{self, JoinHandle},
@@ -39,9 +38,9 @@ impl<const S: usize> RenderJob<S> {
 }
 
 pub struct RenderProcessor<const S: usize> {
-    job_tx: Sender<RenderJob<S>>,
+    job_tx: Option<Sender<RenderJob<S>>>,
     job_done_rx: Receiver<()>,
-    worker: JoinHandle<()>,
+    worker: Option<JoinHandle<()>>,
 }
 
 impl<const S: usize> RenderProcessor<S> {
@@ -77,18 +76,30 @@ impl<const S: usize> RenderProcessor<S> {
         });
 
         Ok(Self {
-            job_tx,
+            job_tx: Some(job_tx),
             job_done_rx,
-            worker,
+            worker: Some(worker),
         })
     }
 
     pub fn update(&self, time: f64, inputs: [&[u32]; S], output: &mut [u32]) -> anyhow::Result<()> {
         let job = RenderJob::new(time, inputs, output);
         self.job_tx
+            .as_ref()
+            .unwrap()
             .send(job)
             .map_err(|e| anyhow::anyhow!("Worker thread exited: {e:?}"))?;
         self.job_done_rx.recv()?;
         Ok(())
+    }
+}
+
+impl<const S: usize> Drop for RenderProcessor<S> {
+    fn drop(&mut self) {
+        drop(self.job_tx.take().unwrap());
+        let worker = self.worker.take().unwrap();
+        if let Err(e) = worker.join() {
+            eprintln!("WebVfx: worker failed to exit: {e:?}");
+        }
     }
 }

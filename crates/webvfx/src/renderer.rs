@@ -1,15 +1,7 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use std::{
-    error::Error,
-    path::Path,
-    sync::{
-        Arc,
-        mpsc::{Receiver, Sender, channel},
-    },
-    thread::{self, JoinHandle},
-};
+use std::sync::Arc;
 
 use anyrender::{ImageRenderer, PaintScene};
 use anyrender_vello::VelloImageRenderer;
