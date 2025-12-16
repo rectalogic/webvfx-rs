@@ -114,24 +114,8 @@ mod tests {
     use std::path::Path;
 
     use super::*;
-    use image::{ImageReader, RgbaImage};
-    use testdir::testdir;
-
-    const WIDTH: u32 = 320;
-    const HEIGHT: u32 = 240;
-
-    macro_rules! testdata {
-        () => {
-            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata")
-        };
-    }
-
-    fn read_image(path: &Path) -> Vec<u8> {
-        match ImageReader::open(path).unwrap().decode().unwrap() {
-            image::DynamicImage::ImageRgba8(image_buffer) => image_buffer.into_vec(),
-            _ => panic!("image not rgba8"),
-        }
-    }
+    use image::RgbaImage;
+    use webvfx_test_support::{HEIGHT, WIDTH, assert_reference, read_image, testdata};
 
     fn init_renderer<const S: usize>(html_file: &str) -> (WebVfxRenderer<S>, RgbaImage) {
         let html_path = testdata!().join(html_file);
@@ -161,18 +145,7 @@ mod tests {
             inframe_refs,
             output.as_flat_samples_mut().image_mut_slice().unwrap(),
         );
-        let fail_path = testdir!().join(reference_path.file_name().unwrap());
-        if reference_path.exists() {
-            if output.as_flat_samples().image_slice().unwrap()
-                != read_image(reference_path).as_slice()
-            {
-                output.save(&fail_path).unwrap();
-                panic!("Reference image differs, render saved to {fail_path:?}");
-            }
-        } else {
-            output.save(&fail_path).unwrap();
-            panic!("Reference not found, render saved to {fail_path:?}");
-        }
+        assert_reference(reference_path, output);
     }
 
     #[test]

@@ -5519,6 +5519,7 @@ dependencies = [
  "frei0r-rs2",
  "image",
  "testdir",
+ "webvfx_test_support",
 ]
 
 [[package]]
@@ -5526,6 +5527,7 @@ name = "webvfx_filter"
 version = "0.1.0"
 dependencies = [
  "webvfx",
+ "webvfx_test_support",
 ]
 
 [[package]]
@@ -5533,6 +5535,7 @@ name = "webvfx_mixer2"
 version = "0.1.0"
 dependencies = [
  "webvfx",
+ "webvfx_test_support",
 ]
 
 [[package]]
@@ -5546,6 +5549,17 @@ dependencies = [
 name = "webvfx_source"
 version = "0.1.0"
 dependencies = [
+ "webvfx",
+ "webvfx_test_support",
+]
+
+[[package]]
+name = "webvfx_test_support"
+version = "0.1.0"
+dependencies = [
+ "frei0r-rs2",
+ "image",
+ "testdir",
  "webvfx",
 ]
 

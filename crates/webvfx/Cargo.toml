@@ -6,7 +6,7 @@ license.workspace = true
 
 [dependencies]
 anyhow = "1.0.100"
-frei0r-rs2 = { git = "https://github.com/rectalogic/frei0r-rs.git", tag = "2.3.0" }
+frei0r-rs2 = { workspace = true }
 anyrender = "0.6.2"
 anyrender_vello = "0.6.1"
 blitz = "0.2.1"
@@ -19,3 +19,4 @@ blitz-paint = "*"
 [dev-dependencies]
 image = "0.25"  # Required by blitz-dom
 testdir = "0.9.3"
+webvfx_test_support = { path = "../webvfx_test_support" }

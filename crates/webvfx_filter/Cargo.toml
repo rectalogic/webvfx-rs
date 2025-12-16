@@ -10,3 +10,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 webvfx = { path = "../webvfx" }
+
+[dev-dependencies]
+webvfx_test_support = { path = "../webvfx_test_support" }
