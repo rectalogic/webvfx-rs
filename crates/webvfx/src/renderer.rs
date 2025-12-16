@@ -33,7 +33,6 @@ struct RenderJob<const S: usize> {
     time: f64,
     inputs: [(*const u8, usize); S],
     output: (*mut u8, usize),
-    done_tx: Sender<()>,
 }
 
 // SAFETY: The caller guarantees:
@@ -42,7 +41,7 @@ struct RenderJob<const S: usize> {
 unsafe impl<const S: usize> Send for RenderJob<S> {}
 
 impl<const S: usize> RenderJob<S> {
-    fn new(time: f64, inputs: [&[u32]; S], output: &mut [u32], done_tx: Sender<()>) -> Self {
+    fn new(time: f64, inputs: [&[u32]; S], output: &mut [u32]) -> Self {
         let inputs: [(*const u8, usize); S] = inputs
             .into_iter()
             .map(|input| (input.as_ptr().cast::<u8>(), size_of_val(input)))
@@ -53,7 +52,6 @@ impl<const S: usize> RenderJob<S> {
             time,
             inputs,
             output: (output.as_mut_ptr().cast::<u8>(), size_of_val(output)),
-            done_tx,
         }
     }
 }
@@ -61,7 +59,6 @@ impl<const S: usize> RenderJob<S> {
 pub struct RenderProcessor<const S: usize> {
     job_tx: Sender<RenderJob<S>>,
     job_done_rx: Receiver<()>,
-    job_done_tx: Sender<()>,
     worker: JoinHandle<()>,
 }
 
@@ -93,7 +90,7 @@ impl<const S: usize> RenderProcessor<S> {
 
                 renderer.update(job.time, inputs, output);
 
-                if job.done_tx.send(()).is_err() {
+                if job_done_tx.send(()).is_err() {
                     return;
                 }
             }
@@ -102,13 +99,12 @@ impl<const S: usize> RenderProcessor<S> {
         Ok(Self {
             job_tx,
             job_done_rx,
-            job_done_tx,
             worker,
         })
     }
 
     pub fn update(&self, time: f64, inputs: [&[u32]; S], output: &mut [u32]) {
-        let job = RenderJob::new(time, inputs, output, self.job_done_tx.clone());
+        let job = RenderJob::new(time, inputs, output);
         self.job_tx.send(job).expect("Worker thread died"); //XXX error handling
         self.job_done_rx.recv().expect("Worker thread died");
     }
