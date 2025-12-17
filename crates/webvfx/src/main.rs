@@ -7,13 +7,13 @@ use std::{
 };
 
 use argh::FromArgs;
-use blitz_dom::DocumentConfig;
+use blitz_dom::{DocumentConfig, qual_name};
 use blitz_html::HtmlDocument;
 use blitz_shell::{
     BlitzApplication, BlitzShellEvent, Window, WindowConfig, create_default_event_loop,
 };
 use blitz_traits::net::Url;
-use webvfx::FileProvider;
+use webvfx::{FileProvider, WEBVFX_SELECTOR_PREFIX};
 use winit::dpi::LogicalSize;
 
 #[derive(FromArgs)]
@@ -26,6 +26,9 @@ struct Args {
     #[argh(option, default = "360")]
     /// height of browser window
     height: usize,
+    #[argh(option)]
+    /// image paths to insert into HTML
+    image: Vec<String>,
     #[argh(positional)]
     /// path to HTML file
     file: String,
@@ -48,7 +51,7 @@ fn main() {
         }
     };
 
-    let doc = HtmlDocument::from_html(
+    let mut document = HtmlDocument::from_html(
         &html,
         DocumentConfig {
             base_url: Some(url.into()),
@@ -57,13 +60,29 @@ fn main() {
             ..Default::default()
         },
     );
-    //XXX accept list of images on cli and insert them into webvfx-imageX elements
+
+    for (index, image) in args.image.iter().enumerate() {
+        let selector = format!("#{}{}", WEBVFX_SELECTOR_PREFIX, index + 1);
+        if let Ok(Some(node_id)) = document.query_selector(&selector) {
+            if let Ok((url, _)) = path_url(image) {
+                document
+                    .mutate()
+                    .set_attribute(node_id, qual_name!("src"), url.as_str());
+            } else {
+                eprintln!("Invalid image path '{image}', ignoring");
+            }
+        } else {
+            eprintln!("Selector {selector} not found in document");
+        }
+    }
+
     let renderer = anyrender_vello::VelloWindowRenderer::new();
     let window = WindowConfig::with_attributes(
-        Box::new(doc) as _,
+        Box::new(document) as _,
         renderer,
         Window::default_attributes()
-            .with_inner_size(LogicalSize::new(args.width as f64, args.height as f64)),
+            .with_inner_size(LogicalSize::new(args.width as f64, args.height as f64))
+            .with_title("WebVfx Viewer"),
     );
 
     let event_loop = create_default_event_loop::<BlitzShellEvent>();

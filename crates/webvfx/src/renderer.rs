@@ -32,6 +32,8 @@ cfg_if::cfg_if! {
 // Node ID mapped to a pair of video frame buffers
 type VideoNode = (usize, [Arc<Vec<u8>>; 2]);
 
+pub const WEBVFX_SELECTOR_PREFIX: &str = "webvfx-video";
+
 struct WebVfxRenderer<const S: usize> {
     width: u32,
     height: u32,
@@ -55,7 +57,7 @@ impl<const S: usize> WebVfxRenderer<S> {
         let video_nodes: [Option<VideoNode>; S] = (0..S)
             .map(|i| {
                 if let Ok(Some(node_id)) =
-                    document.query_selector(&format!("#webvfx-video{}", i + 1))
+                    document.query_selector(&format!("#{}{}", WEBVFX_SELECTOR_PREFIX, i + 1))
                     && let Some(node) = document.get_node_mut(node_id)
                     && let Some(element_data) = node.element_data_mut()
                     && element_data.name.local == local_name!("img")
