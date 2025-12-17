@@ -4,7 +4,7 @@
 use blitz_traits::net::{Bytes, NetHandler, NetProvider, Request};
 use data_url::DataUrl;
 
-pub(super) struct FileProvider;
+pub struct FileProvider;
 
 impl FileProvider {
     fn fetch_inner(&self, request: Request) -> anyhow::Result<Bytes> {

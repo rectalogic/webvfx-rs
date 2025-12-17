@@ -4,6 +4,10 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[[bin]]
+name = "webvfx_viewer"
+path = "src/main.rs"
+
 [dependencies]
 anyhow = { workspace = true }
 cfg-if = { workspace = true }
@@ -14,6 +18,8 @@ anyrender_vello = { workspace = true, optional = true }
 anyrender_vello_cpu = { workspace = true, optional = true }
 anyrender_skia = { workspace = true, optional = true }
 linebender_resource_handle = { workspace = true }
+winit = { workspace = true }
+argh = { workspace = true }
 
 # Don't depend on blitz meta-crate
 # https://github.com/DioxusLabs/blitz/issues/301
@@ -22,6 +28,7 @@ blitz-paint = { workspace = true }
 blitz-traits = { workspace = true }
 blitz-html = { workspace = true }
 blitz-net = { workspace = true }
+blitz-shell = { workspace = true }
 
 [dev-dependencies]
 image = { workspace = true }

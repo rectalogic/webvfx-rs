@@ -29,6 +29,8 @@ anyrender_vello = { version = "0.6.1", default-features = false }
 anyrender_vello_cpu = { version = "0.8.1", default-features = false }
 anyrender_skia = { version = "0.2.0", default-features = false }
 linebender_resource_handle = "0.1"
+winit = { version = "0.30" }
+argh = { version = "0.1" }
 # Don't depend on blitz meta-crate
 # https://github.com/DioxusLabs/blitz/issues/301
 blitz-dom = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false, features = ["svg", "system_fonts", "woff-rust"] }
@@ -36,6 +38,7 @@ blitz-paint = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177"
 blitz-traits = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
 blitz-html = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
 blitz-net = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
+blitz-shell = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
 
 [profile.release]
 lto = true

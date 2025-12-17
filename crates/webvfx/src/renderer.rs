@@ -16,7 +16,7 @@ use blitz_traits::{
 };
 use linebender_resource_handle::Blob;
 
-mod net;
+pub mod net;
 pub mod processor;
 
 cfg_if::cfg_if! {
