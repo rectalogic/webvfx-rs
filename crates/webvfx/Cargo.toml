@@ -5,17 +5,30 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-anyhow = "1.0.100"
+anyhow = { workspace = true }
+cfg-if = { workspace = true }
+data-url = { workspace = true }
 frei0r-rs2 = { workspace = true }
-anyrender = "0.6.2"
-anyrender_vello = "0.6.1"
-blitz = "0.2.1"
+anyrender = { workspace = true }
+anyrender_vello = { workspace = true, optional = true }
+anyrender_vello_cpu = { workspace = true, optional = true }
+anyrender_skia = { workspace = true, optional = true }
+linebender_resource_handle = { workspace = true }
 
-# Indirect dependencies, specify these with default features since blitz doesn't expose feature flags
+# Don't depend on blitz meta-crate
 # https://github.com/DioxusLabs/blitz/issues/301
-blitz-dom = "*"
-blitz-paint = "*"
+blitz-dom = { workspace = true }
+blitz-paint = { workspace = true }
+blitz-traits = { workspace = true }
+blitz-html = { workspace = true }
+blitz-net = { workspace = true }
 
 [dev-dependencies]
 image = { workspace = true }
 test_support = { workspace = true }
+
+[features]
+default = ["anyrender_vello"]
+anyrender_vello = ["dep:anyrender_vello"]
+anyrender_vello_cpu = ["dep:anyrender_vello_cpu"]
+anyrender_skia = ["dep:anyrender_skia"]

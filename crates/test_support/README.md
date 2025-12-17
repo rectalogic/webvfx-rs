@@ -3,6 +3,14 @@ Requires [GraphicsMagick](http://www.graphicsmagick.org/index.html)
 $ brew install graphicsmagick ghostscript
 ```
 
+## Compare images
+
+```sh-session
+$ gm compare testdata/source-1.png new.png -file diff.png
+```
+
+## Generate source images
+
 `a-320x240.png`
 ```sh-session
 $ gm convert \

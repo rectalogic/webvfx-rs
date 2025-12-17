@@ -8,7 +8,7 @@ use std::{
 };
 
 use super::WebVfxRenderer;
-use blitz::traits::net::Url;
+use blitz_traits::net::Url;
 
 struct RenderJob<const S: usize> {
     time: f64,

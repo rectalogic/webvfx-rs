@@ -4,21 +4,30 @@
 use std::sync::Arc;
 
 use anyrender::{ImageRenderer, PaintScene};
-use anyrender_vello::VelloImageRenderer;
-use blitz::{
-    dom::{
-        DocumentConfig, local_name,
-        node::{ImageData, RasterImageData, SpecialElementData},
-    },
-    html::HtmlDocument,
-    paint::paint_scene,
-    traits::{
-        net::Url,
-        shell::{ColorScheme, Viewport},
-    },
+use blitz_dom::{
+    DocumentConfig, local_name,
+    node::{ImageData, RasterImageData, SpecialElementData},
 };
+use blitz_html::HtmlDocument;
+use blitz_paint::paint_scene;
+use blitz_traits::{
+    net::Url,
+    shell::{ColorScheme, Viewport},
+};
+use linebender_resource_handle::Blob;
 
+mod net;
 pub mod processor;
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "anyrender_vello")] {
+        type AnyRender = anyrender_vello::VelloImageRenderer;
+    } else if #[cfg(feature = "anyrender_vello_cpu")] {
+        type AnyRender = anyrender_vello_cpu::VelloCpuImageRenderer;
+    }else if #[cfg(feature = "anyrender_skia")] {
+        type AnyRender = anyrender_skia::SkiaImageRenderer;
+    }
+}
 
 // Node ID mapped to a pair of video frame buffers
 type VideoNode = (usize, [Arc<Vec<u8>>; 2]);
@@ -27,7 +36,7 @@ struct WebVfxRenderer<const S: usize> {
     width: u32,
     height: u32,
     document: HtmlDocument,
-    renderer: VelloImageRenderer,
+    renderer: AnyRender,
     video_nodes: [Option<VideoNode>; S],
     video_node_index: usize,
 }
@@ -37,8 +46,8 @@ impl<const S: usize> WebVfxRenderer<S> {
         let mut document = HtmlDocument::from_html(
             html,
             DocumentConfig {
-                //XXX  also need NetProvider
                 base_url: Some(base_url.as_str().into()),
+                net_provider: Some(Arc::new(net::FileProvider)),
                 viewport: Some(Viewport::new(width, height, 1.0, ColorScheme::Light)),
                 ..Default::default()
             },
@@ -65,7 +74,7 @@ impl<const S: usize> WebVfxRenderer<S> {
             .try_into()
             .unwrap();
 
-        let renderer = VelloImageRenderer::new(width, height);
+        let renderer = AnyRender::new(width, height);
         Self {
             width,
             height,
@@ -97,7 +106,7 @@ impl<const S: usize> WebVfxRenderer<S> {
                     .unwrap()
                     .raster_image_data_mut()
                     .unwrap();
-                raster_data.data = frames[self.video_node_index].clone();
+                raster_data.data = Blob::new(frames[self.video_node_index].clone());
             });
         self.document.resolve(time);
         self.renderer.render(
