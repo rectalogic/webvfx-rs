@@ -9,7 +9,7 @@ build = "../build.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-webvfx = { path = "../webvfx" }
+webvfx = { workspace = true }
 
 [dev-dependencies]
-webvfx_test_support = { path = "../webvfx_test_support" }
+test_support = { workspace = true }

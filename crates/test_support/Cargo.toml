@@ -1,11 +1,11 @@
 [package]
-name = "webvfx_test_support"
+name = "test_support"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
 testdir = "0.9.3"
-image = "0.25"  # Version required by blitz-dom
+image = { workspace = true }
 frei0r-rs2 = { workspace = true }
-webvfx = { path = "../webvfx" }
+webvfx = { workspace = true }

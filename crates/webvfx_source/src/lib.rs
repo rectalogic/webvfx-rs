@@ -10,7 +10,7 @@ mod tests {
     use std::ptr;
 
     use super::*;
-    use webvfx_test_support::{HEIGHT, WIDTH, assert_output, param_cstring, param_string_ptr};
+    use test_support::{HEIGHT, WIDTH, assert_output, param_cstring, param_string_ptr};
 
     #[test]
     fn test_source() {

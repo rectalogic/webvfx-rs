@@ -4693,6 +4693,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "test_support"
+version = "0.1.0"
+dependencies = [
+ "frei0r-rs2",
+ "image",
+ "testdir",
+ "webvfx",
+]
+
+[[package]]
 name = "testdir"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5518,30 +5528,30 @@ dependencies = [
  "blitz-paint",
  "frei0r-rs2",
  "image",
- "testdir",
- "webvfx_test_support",
+ "test_support",
 ]
 
 [[package]]
 name = "webvfx_filter"
 version = "0.1.0"
 dependencies = [
+ "test_support",
  "webvfx",
- "webvfx_test_support",
 ]
 
 [[package]]
 name = "webvfx_mixer2"
 version = "0.1.0"
 dependencies = [
+ "test_support",
  "webvfx",
- "webvfx_test_support",
 ]
 
 [[package]]
 name = "webvfx_mixer3"
 version = "0.1.0"
 dependencies = [
+ "test_support",
  "webvfx",
 ]
 
@@ -5549,17 +5559,7 @@ dependencies = [
 name = "webvfx_source"
 version = "0.1.0"
 dependencies = [
- "webvfx",
- "webvfx_test_support",
-]
-
-[[package]]
-name = "webvfx_test_support"
-version = "0.1.0"
-dependencies = [
- "frei0r-rs2",
- "image",
- "testdir",
+ "test_support",
  "webvfx",
 ]
 

@@ -6,7 +6,7 @@ members = [
     "crates/webvfx_mixer2",
     "crates/webvfx_mixer3",
     "crates/webvfx_source",
-    "crates/webvfx_test_support",
+    "crates/test_support",
 ]
 
 [workspace.package]
@@ -18,6 +18,9 @@ readme = "README.md"
 
 [workspace.dependencies]
 frei0r-rs2 = { git = "https://github.com/rectalogic/frei0r-rs.git", tag = "2.3.0" }
+image = "0.25"  # Version required by blitz-dom
+webvfx = { path = "crates/webvfx" }
+test_support = { path = "crates/test_support" }
 
 [profile.release]
 lto = true

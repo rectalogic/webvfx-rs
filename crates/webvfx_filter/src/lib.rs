@@ -8,7 +8,7 @@ frei0r_rs2::plugin!(FilterPlugin);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use webvfx_test_support::{
+    use test_support::{
         HEIGHT, WIDTH, assert_output, param_cstring, param_string_ptr, read_image_u32,
     };
 

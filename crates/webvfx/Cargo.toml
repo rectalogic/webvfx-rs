@@ -17,6 +17,5 @@ blitz-dom = "*"
 blitz-paint = "*"
 
 [dev-dependencies]
-image = "0.25"  # Required by blitz-dom
-testdir = "0.9.3"
-webvfx_test_support = { path = "../webvfx_test_support" }
+image = { workspace = true }
+test_support = { workspace = true }

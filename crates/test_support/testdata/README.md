@@ -32,3 +32,18 @@ $ gm convert \
   -type TrueColorMatte \
   b-320x240.png
 ```
+
+`c-320x240.png`
+```sh-session
+$ gm convert \
+  -size 300x220 xc:brown \
+  -bordercolor yellow -border 10x10 \
+  -font Helvetica-Bold.ttf \
+  -fill white \
+  -gravity center \
+  -pointsize 200 \
+  -draw "text 0,10 'C'" \
+  -depth 8 \
+  -type TrueColorMatte \
+  c-320x240.png
+```

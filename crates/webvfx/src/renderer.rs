@@ -45,7 +45,8 @@ impl<const S: usize> WebVfxRenderer<S> {
         );
         let video_nodes: [Option<VideoNode>; S] = (0..S)
             .map(|i| {
-                if let Ok(Some(node_id)) = document.query_selector(&format!("#webvfx-video{i}"))
+                if let Ok(Some(node_id)) =
+                    document.query_selector(&format!("#webvfx-video{}", i + 1))
                     && let Some(node) = document.get_node_mut(node_id)
                     && let Some(element_data) = node.element_data_mut()
                     && element_data.name.local == local_name!("img")
@@ -115,7 +116,7 @@ mod tests {
 
     use super::*;
     use image::RgbaImage;
-    use webvfx_test_support::{HEIGHT, WIDTH, assert_reference, read_image, testdata};
+    use test_support::{HEIGHT, WIDTH, assert_reference, read_image, testdata};
 
     fn init_renderer<const S: usize>(html_file: &str) -> (WebVfxRenderer<S>, RgbaImage) {
         let html_path = testdata!().join(html_file);
@@ -218,6 +219,44 @@ mod tests {
             ],
             &mut output,
             &testdata!().join("mixer2-3.png"),
+        );
+    }
+
+    #[test]
+    fn test_mixer3() {
+        let (mut r, mut output) = init_renderer::<3>("mixer3.html");
+        render(
+            0.0,
+            &mut r,
+            [
+                &testdata!().join("a-320x240.png"),
+                &testdata!().join("b-320x240.png"),
+                &testdata!().join("c-320x240.png"),
+            ],
+            &mut output,
+            &testdata!().join("mixer3-1.png"),
+        );
+        render(
+            1.0,
+            &mut r,
+            [
+                &testdata!().join("c-320x240.png"),
+                &testdata!().join("a-320x240.png"),
+                &testdata!().join("b-320x240.png"),
+            ],
+            &mut output,
+            &testdata!().join("mixer3-2.png"),
+        );
+        render(
+            3.0,
+            &mut r,
+            [
+                &testdata!().join("b-320x240.png"),
+                &testdata!().join("c-320x240.png"),
+                &testdata!().join("a-320x240.png"),
+            ],
+            &mut output,
+            &testdata!().join("mixer3-3.png"),
         );
     }
 }
