@@ -3,9 +3,18 @@ name = "test_support"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "README.md"
+publish = false
 
 [dependencies]
-testdir = "0.9.3"
+testdir = { workspace = true }
 image = { workspace = true }
 frei0r-rs2 = { workspace = true }
 webvfx = { workspace = true }
+
+[lints]
+workspace = true

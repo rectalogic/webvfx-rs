@@ -98,7 +98,7 @@ impl<const S: usize> WebVfxRenderer<S> {
         self.video_nodes
             .iter_mut()
             .zip(inframes)
-            .flat_map(|(video_node, inframe)| {
+            .filter_map(|(video_node, inframe)| {
                 video_node.as_mut().map(|video_node| (video_node, inframe))
             })
             .for_each(|((video_node_ids, frames), inframe)| {
@@ -156,7 +156,7 @@ mod tests {
         let inframes = inframe_paths.map(read_image);
         let inframe_refs: [&[u8]; S] = inframes
             .iter()
-            .map(|f| f.as_slice())
+            .map(std::vec::Vec::as_slice)
             .collect::<Vec<&[u8]>>()
             .try_into()
             .unwrap();

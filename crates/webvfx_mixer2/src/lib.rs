@@ -28,8 +28,8 @@ mod tests {
                 inframe2.as_ptr(),
                 std::ptr::null(),
                 output.as_mut_ptr(),
-            )
-        };
+            );
+        }
         assert_output("mixer2-1.png", &output);
         f0r_destruct(plugin);
     }

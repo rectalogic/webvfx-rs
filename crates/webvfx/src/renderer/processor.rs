@@ -49,7 +49,7 @@ impl<const S: usize> RenderProcessor<S> {
         let (job_done_tx, job_done_rx) = channel::<()>();
         let html_path = html_path.as_ref();
         let html = std::fs::read_to_string(html_path)?;
-        let url = Url::from_file_path(html_path).map_err(|_| {
+        let url = Url::from_file_path(html_path).map_err(|()| {
             anyhow::anyhow!("WebVfx: path '{}' must be absolute", html_path.display())
         })?;
 

@@ -7,7 +7,7 @@ use data_url::DataUrl;
 pub struct FileProvider;
 
 impl FileProvider {
-    fn fetch_inner(&self, request: Request) -> anyhow::Result<Bytes> {
+    fn fetch_inner(request: &Request) -> anyhow::Result<Bytes> {
         match request.url.scheme() {
             "data" => {
                 let data_url = DataUrl::process(request.url.as_str())?;
@@ -26,8 +26,8 @@ impl FileProvider {
 impl NetProvider for FileProvider {
     fn fetch(&self, _doc_id: usize, request: Request, handler: Box<dyn NetHandler>) {
         let url = request.url.to_string();
-        match self.fetch_inner(request) {
-            Err(e) => eprintln!("Failed to fetch url {}: {e:?}", url),
+        match Self::fetch_inner(&request) {
+            Err(e) => eprintln!("Failed to fetch url {url}: {e:?}"),
             Ok(bytes) => handler.bytes(url, bytes),
         }
     }

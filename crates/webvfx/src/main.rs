@@ -18,6 +18,7 @@ use winit::dpi::LogicalSize;
 
 #[derive(FromArgs)]
 #[argh(help_triggers("-h", "--help", "help"))]
+#[allow(clippy::doc_markdown)]
 /// WebVfx HTML viewer
 struct Args {
     #[argh(option, default = "640")]
@@ -84,6 +85,7 @@ fn main() {
     let window = WindowConfig::with_attributes(
         Box::new(document) as _,
         renderer,
+        #[allow(clippy::cast_precision_loss)]
         Window::default_attributes()
             .with_inner_size(LogicalSize::new(args.width as f64, args.height as f64))
             .with_title("WebVfx Viewer"),
@@ -93,12 +95,12 @@ fn main() {
     let mut application = BlitzApplication::new(event_loop.create_proxy());
     application.add_window(window);
 
-    event_loop.run_app(&mut application).unwrap()
+    event_loop.run_app(&mut application).unwrap();
 }
 
 fn path_url(path: &str) -> anyhow::Result<(Url, PathBuf)> {
     let path = path::absolute(Path::new(path))?;
     let url =
-        Url::from_file_path(&path).map_err(|_| anyhow::anyhow!("File path must be absolute"))?;
+        Url::from_file_path(&path).map_err(|()| anyhow::anyhow!("File path must be absolute"))?;
     Ok((url, path))
 }

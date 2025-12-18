@@ -14,7 +14,10 @@ version = "0.1.0"
 edition = "2024"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/rectalogic/webvfx-rs"
+description = "frei0r plugins that implement visual effects using HTML"
 readme = "README.md"
+keywords = ["frei0r", "video", "html", "vfx"]
+categories = ["multimedia", "multimedia::video"]
 
 [workspace.dependencies]
 frei0r-rs2 = { git = "https://github.com/rectalogic/frei0r-rs.git", tag = "2.3.0" }
@@ -32,6 +35,7 @@ linebender_resource_handle = "0.1"
 winit = "0.30"
 smallvec = "1.15"
 argh = "0.1"
+testdir = "0.9.3"
 # Don't depend on blitz meta-crate
 # https://github.com/DioxusLabs/blitz/issues/301
 blitz-dom = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false, features = ["svg", "system_fonts", "woff-rust"] }
@@ -43,3 +47,13 @@ blitz-shell = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177"
 
 [profile.release]
 lto = true
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+style = { level = "warn", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+cast_possible_truncation = "allow"
+multiple_crate_versions = "allow"
+missing_panics_doc = "allow"
+must_use_candidate = "allow"
+cargo_common_metadata = "allow"

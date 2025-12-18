@@ -32,11 +32,17 @@ pub fn assert_reference(reference_path: &Path, output: &RgbaImage) {
         if output.as_flat_samples().image_slice().unwrap() != read_image(reference_path).as_slice()
         {
             output.save(&fail_path).unwrap();
-            panic!("Reference image differs, render saved to {fail_path:?}");
+            panic!(
+                "Reference image differs, render saved to {}",
+                fail_path.display()
+            );
         }
     } else {
         output.save(&fail_path).unwrap();
-        panic!("Reference not found, render saved to {fail_path:?}");
+        panic!(
+            "Reference not found, render saved to {}",
+            fail_path.display()
+        );
     }
 }
 
@@ -44,6 +50,7 @@ pub fn param_cstring(filename: &str) -> CString {
     CString::new(testdata!().join(filename).to_str().unwrap()).unwrap()
 }
 
+#[allow(clippy::ref_as_ptr)]
 pub fn param_string_ptr(string: &CString) -> f0r_param_t {
     (&(string.as_ptr() as *mut c_void) as *const *mut c_void) as f0r_param_t
 }
@@ -63,7 +70,7 @@ pub fn assert_output(reference_file: &str, output: &Vec<u32>) {
 pub fn read_image_u32(filename: &str) -> Vec<u32> {
     let bytes = read_image(&testdata!().join(filename));
     assert!((bytes.as_ptr() as usize).is_multiple_of(std::mem::align_of::<u32>()));
-
+    #[allow(clippy::ptr_as_ptr, clippy::cast_ptr_alignment)]
     let u32_slice =
         unsafe { std::slice::from_raw_parts(bytes.as_ptr() as *const u32, bytes.len() / 4) };
     u32_slice.into()

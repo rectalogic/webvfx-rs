@@ -87,7 +87,7 @@ where
         c"html_path",
         c"Web page file path",
         |plugin| plugin.html_path.as_c_str(),
-        |plugin, value| plugin.html_path = value.to_owned(),
+        |plugin, value| value.clone_into(&mut plugin.html_path),
     )];
 
     fn info() -> frei0r_rs2::PluginInfo {

@@ -3,6 +3,11 @@ name = "webvfx"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+readme.workspace = true
+description.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
 
 [[bin]]
 name = "webvfx_viewer"
@@ -40,3 +45,6 @@ default = ["anyrender_vello"]
 anyrender_vello = ["dep:anyrender_vello"]
 anyrender_vello_cpu = ["dep:anyrender_vello_cpu"]
 anyrender_skia = ["dep:anyrender_skia"]
+
+[lints]
+workspace = true

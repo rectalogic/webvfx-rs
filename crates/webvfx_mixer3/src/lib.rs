@@ -29,8 +29,8 @@ mod tests {
                 inframe2.as_ptr(),
                 inframe3.as_ptr(),
                 output.as_mut_ptr(),
-            )
-        };
+            );
+        }
         assert_output("mixer3-1.png", &output);
         f0r_destruct(plugin);
     }
