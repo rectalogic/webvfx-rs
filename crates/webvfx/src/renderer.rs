@@ -34,6 +34,7 @@ cfg_if::cfg_if! {
 type VideoNode = (SmallVec<[usize; 32]>, [Arc<Vec<u8>>; 2]);
 
 pub const WEBVFX_SELECTOR_PREFIX: &str = "img.webvfx-video";
+pub const WEBVFX_CSS_ANIMATION_PROPERTY: &str = "--webvfx-animation-duration";
 
 struct WebVfxRenderer<const S: usize> {
     width: u32,
@@ -45,11 +46,19 @@ struct WebVfxRenderer<const S: usize> {
 }
 
 impl<const S: usize> WebVfxRenderer<S> {
-    fn new(base_url: &Url, html: &str, width: u32, height: u32) -> Self {
+    fn new(base_url: &Url, html: &str, animation_duration: &str, width: u32, height: u32) -> Self {
+        let css_properties = format!(
+            r"
+            :root {{
+                {WEBVFX_CSS_ANIMATION_PROPERTY}: {animation_duration}
+            }}
+        "
+        );
         let mut document = HtmlDocument::from_html(
             html,
             DocumentConfig {
                 base_url: Some(base_url.as_str().into()),
+                ua_stylesheets: Some(vec![css_properties]),
                 net_provider: Some(Arc::new(net::FileProvider)),
                 viewport: Some(Viewport::new(width, height, 1.0, ColorScheme::Light)),
                 ..Default::default()
@@ -141,7 +150,7 @@ mod tests {
         let html_path = testdata!().join(html_file);
         let html = std::fs::read_to_string(&html_path).unwrap();
         let url = Url::from_file_path(html_path.as_path()).unwrap();
-        let renderer = WebVfxRenderer::<S>::new(&url, &html, WIDTH, HEIGHT);
+        let renderer = WebVfxRenderer::<S>::new(&url, &html, "5s", WIDTH, HEIGHT);
         let output = RgbaImage::new(WIDTH, HEIGHT);
         (renderer, output)
     }

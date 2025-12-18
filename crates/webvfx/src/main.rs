@@ -13,7 +13,7 @@ use blitz_shell::{
     BlitzApplication, BlitzShellEvent, Window, WindowConfig, create_default_event_loop,
 };
 use blitz_traits::net::Url;
-use webvfx::{FileProvider, WEBVFX_SELECTOR_PREFIX};
+use webvfx::{FileProvider, WEBVFX_CSS_ANIMATION_PROPERTY, WEBVFX_SELECTOR_PREFIX};
 use winit::dpi::LogicalSize;
 
 #[derive(FromArgs)]
@@ -24,12 +24,19 @@ struct Args {
     #[argh(option, default = "640")]
     /// width of browser window
     width: usize,
+
     #[argh(option, default = "360")]
     /// height of browser window
     height: usize,
+
+    #[argh(option, short = 'd', default = r#"String::from("5s")"#)]
+    /// CSS animation duration (specify s or ms suffix)
+    animation_duration: String,
+
     #[argh(option)]
     /// image paths to insert into HTML
     image: Vec<String>,
+
     #[argh(positional)]
     /// path to HTML file
     file: String,
@@ -56,7 +63,14 @@ fn main() {
         &html,
         DocumentConfig {
             base_url: Some(url.into()),
-            // ua_stylesheets: Some(cfg.stylesheets),
+            ua_stylesheets: Some(vec![format!(
+                r"
+                :root {{
+                    {WEBVFX_CSS_ANIMATION_PROPERTY}: {}
+                }}
+                ",
+                args.animation_duration
+            )]),
             net_provider: Some(Arc::new(FileProvider)),
             ..Default::default()
         },

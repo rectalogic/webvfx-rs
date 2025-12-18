@@ -16,6 +16,7 @@ pub mod source;
 
 pub struct WebVfxPlugin<K: frei0r_rs2::PluginKind, const S: usize> {
     html_path: CString,
+    animation_duration: CString,
     width: u32,
     height: u32,
     processor: Option<anyhow::Result<RenderProcessor<S>>>,
@@ -29,6 +30,7 @@ where
     fn new(width: u32, height: u32) -> Self {
         Self {
             html_path: c"".to_owned(),
+            animation_duration: c"5s".to_owned(),
             width,
             height,
             processor: None,
@@ -41,8 +43,13 @@ where
             match self.html_path.to_str() {
                 Ok(html_path) => match path::absolute(Path::new(html_path)) {
                     Ok(absolute_path) => {
-                        let processor =
-                            RenderProcessor::<S>::new(absolute_path, self.width, self.height);
+                        let animation_duration = self.animation_duration.to_str().unwrap_or("5s");
+                        let processor = RenderProcessor::<S>::new(
+                            absolute_path,
+                            animation_duration,
+                            self.width,
+                            self.height,
+                        );
                         if let Err(ref e) = processor {
                             eprintln!("WebVfx: failed to create renderer: {e:?}");
                         }
@@ -83,12 +90,20 @@ where
 {
     type Kind = K;
 
-    const PARAMS: &'static [frei0r_rs2::ParamInfo<Self>] = &[frei0r_rs2::ParamInfo::new_string(
-        c"html_path",
-        c"Web page file path",
-        |plugin| plugin.html_path.as_c_str(),
-        |plugin, value| value.clone_into(&mut plugin.html_path),
-    )];
+    const PARAMS: &'static [frei0r_rs2::ParamInfo<Self>] = &[
+        frei0r_rs2::ParamInfo::new_string(
+            c"html_path",
+            c"Web page file path",
+            |plugin| plugin.html_path.as_c_str(),
+            |plugin, value| value.clone_into(&mut plugin.html_path),
+        ),
+        frei0r_rs2::ParamInfo::new_string(
+            c"duration",
+            c"CSS animation duration (specify with s or ms suffix). Sets --webvfx-animation-duration CSS property. Default 5s.",
+            |plugin| plugin.animation_duration.as_c_str(),
+            |plugin, value| value.clone_into(&mut plugin.animation_duration),
+        ),
+    ];
 
     fn info() -> frei0r_rs2::PluginInfo {
         frei0r_rs2::PluginInfo {

@@ -44,7 +44,12 @@ pub struct RenderProcessor<const S: usize> {
 }
 
 impl<const S: usize> RenderProcessor<S> {
-    pub fn new(html_path: impl AsRef<Path>, width: u32, height: u32) -> anyhow::Result<Self> {
+    pub fn new(
+        html_path: impl AsRef<Path>,
+        animation_duration: &str,
+        width: u32,
+        height: u32,
+    ) -> anyhow::Result<Self> {
         let (job_tx, job_rx) = channel::<RenderJob<S>>();
         let (job_done_tx, job_done_rx) = channel::<()>();
         let html_path = html_path.as_ref();
@@ -53,8 +58,10 @@ impl<const S: usize> RenderProcessor<S> {
             anyhow::anyhow!("WebVfx: path '{}' must be absolute", html_path.display())
         })?;
 
+        let animation_duration = String::from(animation_duration);
         let worker = thread::spawn(move || {
-            let mut renderer = WebVfxRenderer::<S>::new(&url, &html, width, height);
+            let mut renderer =
+                WebVfxRenderer::<S>::new(&url, &html, &animation_duration, width, height);
             while let Ok(job) = job_rx.recv() {
                 let inputs: [&[u8]; S] = job
                     .inputs
