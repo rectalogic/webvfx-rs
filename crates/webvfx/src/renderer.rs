@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use anyrender::{ImageRenderer, PaintScene};
 use blitz_dom::{
-    DocumentConfig, local_name,
+    DocumentConfig,
     node::{ImageData, RasterImageData, SpecialElementData},
 };
 use blitz_html::HtmlDocument;
@@ -15,6 +15,7 @@ use blitz_traits::{
     shell::{ColorScheme, Viewport},
 };
 use linebender_resource_handle::Blob;
+use smallvec::SmallVec;
 
 pub mod net;
 pub mod processor;
@@ -30,9 +31,9 @@ cfg_if::cfg_if! {
 }
 
 // Node ID mapped to a pair of video frame buffers
-type VideoNode = (usize, [Arc<Vec<u8>>; 2]);
+type VideoNode = (SmallVec<[usize; 32]>, [Arc<Vec<u8>>; 2]);
 
-pub const WEBVFX_SELECTOR_PREFIX: &str = "webvfx-video";
+pub const WEBVFX_SELECTOR_PREFIX: &str = "img.webvfx-video";
 
 struct WebVfxRenderer<const S: usize> {
     width: u32,
@@ -56,18 +57,23 @@ impl<const S: usize> WebVfxRenderer<S> {
         );
         let video_nodes: [Option<VideoNode>; S] = (0..S)
             .map(|i| {
-                if let Ok(Some(node_id)) =
-                    document.query_selector(&format!("#{}{}", WEBVFX_SELECTOR_PREFIX, i + 1))
-                    && let Some(node) = document.get_node_mut(node_id)
-                    && let Some(element_data) = node.element_data_mut()
-                    && element_data.name.local == local_name!("img")
+                if let Ok(node_ids) =
+                    document.query_selector_all(&format!("{}{}", WEBVFX_SELECTOR_PREFIX, i + 1))
+                    && !node_ids.is_empty()
                 {
                     let frame = vec![0u8; (width * height * 4) as usize];
                     let frame_arc = Arc::new(frame.clone());
-                    element_data.special_data = SpecialElementData::Image(Box::new(
-                        ImageData::Raster(RasterImageData::new(width, height, frame_arc.clone())),
-                    ));
-                    Some((node_id, [frame_arc, Arc::new(frame)]))
+                    node_ids.iter().copied().for_each(|node_id| {
+                        if let Some(node) = document.get_node_mut(node_id)
+                            && let Some(element_data) = node.element_data_mut()
+                        {
+                            element_data.special_data =
+                                SpecialElementData::Image(Box::new(ImageData::Raster(
+                                    RasterImageData::new(width, height, frame_arc.clone()),
+                                )));
+                        }
+                    });
+                    Some((node_ids, [frame_arc, Arc::new(frame)]))
                 } else {
                     None
                 }
@@ -95,20 +101,22 @@ impl<const S: usize> WebVfxRenderer<S> {
             .flat_map(|(video_node, inframe)| {
                 video_node.as_mut().map(|video_node| (video_node, inframe))
             })
-            .for_each(|((video_node_id, frames), inframe)| {
+            .for_each(|((video_node_ids, frames), inframe)| {
                 Arc::get_mut(&mut frames[self.video_node_index])
                     .unwrap()
                     .copy_from_slice(inframe);
-                // Safe to unwrap since we verified all this when contructing
-                let raster_data = self
-                    .document
-                    .get_node_mut(*video_node_id)
-                    .unwrap()
-                    .element_data_mut()
-                    .unwrap()
-                    .raster_image_data_mut()
-                    .unwrap();
-                raster_data.data = Blob::new(frames[self.video_node_index].clone());
+                video_node_ids.iter().copied().for_each(|node_id| {
+                    // Safe to unwrap since we verified all this when contructing
+                    let raster_data = self
+                        .document
+                        .get_node_mut(node_id)
+                        .unwrap()
+                        .element_data_mut()
+                        .unwrap()
+                        .raster_image_data_mut()
+                        .unwrap();
+                    raster_data.data = Blob::new(frames[self.video_node_index].clone());
+                });
             });
         self.document.resolve(time);
         self.renderer.render(
@@ -233,9 +241,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_mixer3() {
-        let (mut r, mut output) = init_renderer::<3>("mixer3.html");
+    fn test_mixer3_base(html_file: &str, reference_paths: [&str; 3]) {
+        let (mut r, mut output) = init_renderer::<3>(html_file);
         render(
             0.0,
             &mut r,
@@ -245,7 +252,7 @@ mod tests {
                 &testdata!().join("c-320x240.png"),
             ],
             &mut output,
-            &testdata!().join("mixer3-1.png"),
+            &testdata!().join(reference_paths[0]),
         );
         render(
             1.0,
@@ -256,7 +263,7 @@ mod tests {
                 &testdata!().join("b-320x240.png"),
             ],
             &mut output,
-            &testdata!().join("mixer3-2.png"),
+            &testdata!().join(reference_paths[1]),
         );
         render(
             3.0,
@@ -267,7 +274,27 @@ mod tests {
                 &testdata!().join("a-320x240.png"),
             ],
             &mut output,
-            &testdata!().join("mixer3-3.png"),
+            &testdata!().join(reference_paths[2]),
+        );
+    }
+
+    #[test]
+    fn test_mixer3() {
+        test_mixer3_base(
+            "mixer3.html",
+            ["mixer3-1.png", "mixer3-2.png", "mixer3-3.png"],
+        );
+    }
+
+    #[test]
+    fn test_mixer3_dupe() {
+        test_mixer3_base(
+            "mixer3-dupe.html",
+            [
+                "mixer3-dupe-1.png",
+                "mixer3-dupe-2.png",
+                "mixer3-dupe-3.png",
+            ],
         );
     }
 }

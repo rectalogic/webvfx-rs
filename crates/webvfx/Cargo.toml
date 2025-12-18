@@ -19,6 +19,7 @@ anyrender_vello_cpu = { workspace = true, optional = true }
 anyrender_skia = { workspace = true, optional = true }
 linebender_resource_handle = { workspace = true }
 winit = { workspace = true }
+smallvec = { workspace = true }
 argh = { workspace = true }
 
 # Don't depend on blitz meta-crate

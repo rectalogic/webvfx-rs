@@ -62,12 +62,16 @@ fn main() {
     );
 
     for (index, image) in args.image.iter().enumerate() {
-        let selector = format!("#{}{}", WEBVFX_SELECTOR_PREFIX, index + 1);
-        if let Ok(Some(node_id)) = document.query_selector(&selector) {
+        let selector = format!("{}{}", WEBVFX_SELECTOR_PREFIX, index + 1);
+        if let Ok(node_ids) = document.query_selector_all(&selector)
+            && !node_ids.is_empty()
+        {
             if let Ok((url, _)) = path_url(image) {
-                document
-                    .mutate()
-                    .set_attribute(node_id, qual_name!("src"), url.as_str());
+                node_ids.iter().copied().for_each(|node_id| {
+                    document
+                        .mutate()
+                        .set_attribute(node_id, qual_name!("src"), url.as_str());
+                });
             } else {
                 eprintln!("Invalid image path '{image}', ignoring");
             }
