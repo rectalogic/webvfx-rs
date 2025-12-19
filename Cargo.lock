@@ -4137,7 +4137,6 @@ dependencies = [
 name = "test_support"
 version = "0.1.0"
 dependencies = [
- "frei0r-rs2",
  "image",
  "testdir",
  "webvfx",
@@ -4940,7 +4939,6 @@ dependencies = [
  "cfg-if",
  "data-url",
  "frei0r-rs2",
- "image",
  "linebender_resource_handle",
  "smallvec",
  "test_support",

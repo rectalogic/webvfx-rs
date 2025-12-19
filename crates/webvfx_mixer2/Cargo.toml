@@ -14,10 +14,10 @@ build = "../build.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-webvfx = { workspace = true }
+webvfx = { path = "../webvfx" }
 
 [dev-dependencies]
-test_support = { workspace = true }
+test_support = { path = "../test_support" }
 
 [lints]
 workspace = true

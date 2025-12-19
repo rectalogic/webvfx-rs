@@ -143,8 +143,7 @@ mod tests {
     use std::path::Path;
 
     use super::*;
-    use image::RgbaImage;
-    use test_support::{HEIGHT, WIDTH, assert_reference, read_image, testdata};
+    use test_support::{HEIGHT, RgbaImage, WIDTH, assert_reference, read_image, testdata};
 
     fn init_renderer<const S: usize>(html_file: &str) -> (WebVfxRenderer<S>, RgbaImage) {
         let html_path = testdata!().join(html_file);

@@ -11,10 +11,9 @@ readme = "README.md"
 publish = false
 
 [dependencies]
-testdir = { workspace = true }
-image = { workspace = true }
-frei0r-rs2 = { workspace = true }
-webvfx = { workspace = true }
+testdir = "0.9.3"
+image = { version = "0.25", default-features = false, features = ["png"] }  # Version required by blitz-dom
+webvfx = { path = "../webvfx" }
 
 [lints]
 workspace = true

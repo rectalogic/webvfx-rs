@@ -19,32 +19,6 @@ readme = "README.md"
 keywords = ["frei0r", "video", "html", "vfx"]
 categories = ["multimedia", "multimedia::video"]
 
-[workspace.dependencies]
-frei0r-rs2 = { git = "https://github.com/rectalogic/frei0r-rs.git", tag = "2.3.0" }
-image = { version = "0.25", default-features = false, features = ["png"] }  # Version required by blitz-dom
-webvfx = { path = "crates/webvfx" }
-test_support = { path = "crates/test_support" }
-anyhow = "1.0.100"
-cfg-if = "1.0.4"
-data-url = "0.3.2"
-anyrender = "0.6.2"
-anyrender_vello = { version = "0.6.1", default-features = false }
-anyrender_vello_cpu = { version = "0.8.1", default-features = false }
-anyrender_skia = { version = "0.2.0", default-features = false }
-linebender_resource_handle = "0.1"
-winit = "0.30"
-smallvec = "1.15"
-argh = "0.1"
-testdir = "0.9.3"
-# Don't depend on blitz meta-crate
-# https://github.com/DioxusLabs/blitz/issues/301
-blitz-dom = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false, features = ["svg", "system_fonts", "woff-rust"] }
-blitz-paint = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false, features = ["svg"] }
-blitz-traits = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
-blitz-html = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
-blitz-net = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
-blitz-shell = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
-
 [profile.release]
 lto = true
 
@@ -56,4 +30,3 @@ cast_possible_truncation = "allow"
 multiple_crate_versions = "allow"
 missing_panics_doc = "allow"
 must_use_candidate = "allow"
-cargo_common_metadata = "allow"

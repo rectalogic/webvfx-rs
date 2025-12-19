@@ -14,31 +14,30 @@ name = "webvfx_viewer"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = { workspace = true }
-cfg-if = { workspace = true }
-data-url = { workspace = true }
-frei0r-rs2 = { workspace = true }
-anyrender = { workspace = true }
-anyrender_vello = { workspace = true, optional = true }
-anyrender_vello_cpu = { workspace = true, optional = true }
-anyrender_skia = { workspace = true, optional = true }
-linebender_resource_handle = { workspace = true }
-winit = { workspace = true }
-smallvec = { workspace = true }
-argh = { workspace = true }
+frei0r-rs2 = { git = "https://github.com/rectalogic/frei0r-rs.git", tag = "2.3.0" }
+anyhow = "1.0.100"
+cfg-if = "1.0.4"
+data-url = "0.3.2"
+anyrender = "0.6.2"
+anyrender_vello = { version = "0.6.1", default-features = false, optional = true }
+anyrender_vello_cpu = { version = "0.8.1", default-features = false, optional = true }
+anyrender_skia = { version = "0.2.0", default-features = false, optional = true }
+linebender_resource_handle = "0.1"
+winit = "0.30"
+smallvec = "1.15"
+argh = "0.1"
 
 # Don't depend on blitz meta-crate
 # https://github.com/DioxusLabs/blitz/issues/301
-blitz-dom = { workspace = true }
-blitz-paint = { workspace = true }
-blitz-traits = { workspace = true }
-blitz-html = { workspace = true }
-blitz-net = { workspace = true }
-blitz-shell = { workspace = true }
+blitz-dom = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false, features = ["svg", "system_fonts", "woff-rust"] }
+blitz-paint = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false, features = ["svg"] }
+blitz-traits = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
+blitz-html = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
+blitz-net = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
+blitz-shell = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
 
 [dev-dependencies]
-image = { workspace = true }
-test_support = { workspace = true }
+test_support = { path = "../test_support" }
 
 [features]
 default = ["anyrender_vello"]

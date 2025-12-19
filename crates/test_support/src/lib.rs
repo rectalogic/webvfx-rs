@@ -1,11 +1,12 @@
 use std::path::Path;
 
-use image::{ImageReader, RgbaImage};
+use image::ImageReader;
+pub use image::RgbaImage;
 use testdir::testdir;
 
 use std::ffi::{CString, c_void};
 
-use frei0r_rs2::ffi::f0r_param_t;
+use webvfx::frei0r_rs2::ffi::f0r_param_t;
 
 pub const WIDTH: u32 = 320;
 pub const HEIGHT: u32 = 240;
