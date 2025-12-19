@@ -142,13 +142,20 @@ impl<const S: usize> WebVfxRenderer<S> {
 mod tests {
     use std::path::Path;
 
+    use crate::process_template;
+
     use super::*;
     use test_support::{HEIGHT, RgbaImage, WIDTH, assert_reference, read_image, testdata};
 
-    fn init_renderer<const S: usize>(html_file: &str) -> (WebVfxRenderer<S>, RgbaImage) {
-        let html_path = testdata!().join(html_file);
-        let html = std::fs::read_to_string(&html_path).unwrap();
-        let url = Url::from_file_path(html_path.as_path()).unwrap();
+    fn init_renderer<const S: usize>(
+        html_file: &str,
+        json_file: Option<&str>,
+    ) -> (WebVfxRenderer<S>, RgbaImage) {
+        let (url, html) = process_template(
+            testdata!().join(html_file),
+            json_file.map(|f| testdata!().join(f)),
+        )
+        .unwrap();
         let renderer = WebVfxRenderer::<S>::new(&url, &html, "5s", WIDTH, HEIGHT);
         let output = RgbaImage::new(WIDTH, HEIGHT);
         (renderer, output)
@@ -178,7 +185,7 @@ mod tests {
 
     #[test]
     fn test_source() {
-        let (mut r, mut output) = init_renderer::<0>("source.html");
+        let (mut r, mut output) = init_renderer::<0>("source.html", None);
         render(
             0.0,
             &mut r,
@@ -189,8 +196,21 @@ mod tests {
     }
 
     #[test]
+    fn test_source_template() {
+        let (mut r, mut output) =
+            init_renderer::<0>("source-template.html", Some("source-template.json"));
+        render(
+            0.0,
+            &mut r,
+            [],
+            &mut output,
+            &testdata!().join("source-template-1.png"),
+        );
+    }
+
+    #[test]
     fn test_filter() {
-        let (mut r, mut output) = init_renderer::<1>("filter.html");
+        let (mut r, mut output) = init_renderer::<1>("filter.html", None);
         render(
             0.0,
             &mut r,
@@ -216,7 +236,7 @@ mod tests {
 
     #[test]
     fn test_mixer2() {
-        let (mut r, mut output) = init_renderer::<2>("mixer2.html");
+        let (mut r, mut output) = init_renderer::<2>("mixer2.html", None);
         render(
             0.0,
             &mut r,
@@ -250,7 +270,7 @@ mod tests {
     }
 
     fn test_mixer3_base(html_file: &str, reference_paths: [&str; 3]) {
-        let (mut r, mut output) = init_renderer::<3>(html_file);
+        let (mut r, mut output) = init_renderer::<3>(html_file, None);
         render(
             0.0,
             &mut r,

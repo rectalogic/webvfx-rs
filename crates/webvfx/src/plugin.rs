@@ -4,7 +4,6 @@
 use std::{
     ffi::{CStr, CString},
     marker::PhantomData,
-    path::{self, Path},
 };
 
 use crate::renderer::processor::RenderProcessor;
@@ -16,6 +15,7 @@ pub mod source;
 
 pub struct WebVfxPlugin<K: frei0r_rs2::PluginKind, const S: usize> {
     html_path: CString,
+    json_path: CString,
     animation_duration: CString,
     width: u32,
     height: u32,
@@ -30,6 +30,7 @@ where
     fn new(width: u32, height: u32) -> Self {
         Self {
             html_path: c"".to_owned(),
+            json_path: c"".to_owned(),
             animation_duration: c"5s".to_owned(),
             width,
             height,
@@ -40,29 +41,34 @@ where
 
     fn update(&mut self, time: f64, inframes: [&[u32]; S], outframe: &mut [u32]) {
         if self.processor.is_none() {
-            match self.html_path.to_str() {
-                Ok(html_path) => match path::absolute(Path::new(html_path)) {
-                    Ok(absolute_path) => {
-                        let animation_duration = self.animation_duration.to_str().unwrap_or("5s");
-                        let processor = RenderProcessor::<S>::new(
-                            absolute_path,
-                            animation_duration,
-                            self.width,
-                            self.height,
-                        );
-                        if let Err(ref e) = processor {
-                            eprintln!("WebVfx: failed to create renderer: {e:?}");
-                        }
-                        self.processor = Some(processor);
+            match (self.html_path.to_str(), self.json_path.to_str()) {
+                (Ok(html_path), Ok(json_path)) => {
+                    let json_path = if json_path.is_empty() {
+                        None
+                    } else {
+                        Some(json_path)
+                    };
+
+                    let animation_duration = self.animation_duration.to_str().unwrap_or("5s");
+                    let processor = RenderProcessor::<S>::new(
+                        html_path,
+                        json_path,
+                        animation_duration,
+                        self.width,
+                        self.height,
+                    );
+                    if let Err(ref e) = processor {
+                        eprintln!("WebVfx: failed to create renderer: {e:?}");
                     }
-                    Err(e) => {
-                        eprintln!("WebVfx: invalid absolute path '{html_path}': {e:?}");
-                        self.processor = Some(Err(e.into()));
-                        return;
-                    }
-                },
-                Err(e) => {
-                    eprintln!("WebVfx: invalid path `{:?}`", self.html_path);
+                    self.processor = Some(processor);
+                }
+                (Err(e), _) => {
+                    eprintln!("WebVfx: invalid html_path `{:?}'", self.html_path);
+                    self.processor = Some(Err(e.into()));
+                    return;
+                }
+                (_, Err(e)) => {
+                    eprintln!("WebVfx: invalid json_path `{:?}'", self.json_path);
                     self.processor = Some(Err(e.into()));
                     return;
                 }
@@ -96,6 +102,12 @@ where
             c"Web page file path",
             |plugin| plugin.html_path.as_c_str(),
             |plugin, value| value.clone_into(&mut plugin.html_path),
+        ),
+        frei0r_rs2::ParamInfo::new_string(
+            c"json_path",
+            c"JSON file, if specified then html_path is rendered as a template",
+            |plugin| plugin.json_path.as_c_str(),
+            |plugin, value| value.clone_into(&mut plugin.json_path),
         ),
         frei0r_rs2::ParamInfo::new_string(
             c"duration",

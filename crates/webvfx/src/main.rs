@@ -13,7 +13,9 @@ use blitz_shell::{
     BlitzApplication, BlitzShellEvent, Window, WindowConfig, create_default_event_loop,
 };
 use blitz_traits::net::Url;
-use webvfx::{FileProvider, WEBVFX_CSS_ANIMATION_PROPERTY, WEBVFX_SELECTOR_PREFIX};
+use webvfx::{
+    FileProvider, WEBVFX_CSS_ANIMATION_PROPERTY, WEBVFX_SELECTOR_PREFIX, process_template,
+};
 use winit::dpi::LogicalSize;
 
 #[derive(FromArgs)]
@@ -37,24 +39,22 @@ struct Args {
     /// image paths to insert into HTML
     image: Vec<String>,
 
+    #[argh(option)]
+    /// JSON path to template data
+    json: Option<String>,
+
     #[argh(positional)]
     /// path to HTML file
-    file: String,
+    html: String,
 }
 
 fn main() {
     let args: Args = argh::from_env();
 
-    let (url, html) = match path_url(&args.file) {
-        Ok((url, path)) => match std::fs::read_to_string(&path) {
-            Ok(html) => (url, html),
-            Err(e) => {
-                eprintln!("Unable to read {} :{e}", path.display());
-                exit(1);
-            }
-        },
+    let (url, html) = match process_template(&args.html, args.json) {
+        Ok(result) => result,
         Err(e) => {
-            eprintln!("Invalid file: {e}");
+            eprintln!("{e}");
             exit(1);
         }
     };
@@ -114,7 +114,7 @@ fn main() {
 
 fn path_url(path: &str) -> anyhow::Result<(Url, PathBuf)> {
     let path = path::absolute(Path::new(path))?;
-    let url =
-        Url::from_file_path(&path).map_err(|()| anyhow::anyhow!("File path must be absolute"))?;
+    let url = Url::from_file_path(&path)
+        .map_err(|()| anyhow::anyhow!("HTML file path must be absolute"))?;
     Ok((url, path))
 }

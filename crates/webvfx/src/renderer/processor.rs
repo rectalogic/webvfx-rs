@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use std::{
-    path::Path,
+    path::{self, Path},
     sync::mpsc::{Receiver, Sender, channel},
     thread::{self, JoinHandle},
 };
 
 use super::WebVfxRenderer;
+use anyhow::Context;
 use blitz_traits::net::Url;
 
 struct RenderJob<const S: usize> {
@@ -46,17 +47,15 @@ pub struct RenderProcessor<const S: usize> {
 impl<const S: usize> RenderProcessor<S> {
     pub fn new(
         html_path: impl AsRef<Path>,
+        json_path: Option<impl AsRef<Path>>,
         animation_duration: &str,
         width: u32,
         height: u32,
     ) -> anyhow::Result<Self> {
+        let (url, html) = process_template(html_path, json_path)?;
+
         let (job_tx, job_rx) = channel::<RenderJob<S>>();
         let (job_done_tx, job_done_rx) = channel::<()>();
-        let html_path = html_path.as_ref();
-        let html = std::fs::read_to_string(html_path)?;
-        let url = Url::from_file_path(html_path).map_err(|()| {
-            anyhow::anyhow!("WebVfx: path '{}' must be absolute", html_path.display())
-        })?;
 
         let animation_duration = String::from(animation_duration);
         let worker = thread::spawn(move || {
@@ -108,5 +107,56 @@ impl<const S: usize> Drop for RenderProcessor<S> {
         if let Err(e) = worker.join() {
             eprintln!("WebVfx: worker failed to exit: {e:?}");
         }
+    }
+}
+
+#[allow(clippy::missing_errors_doc)]
+pub fn process_template(
+    html_path: impl AsRef<Path>,
+    json_path: Option<impl AsRef<Path>>,
+) -> anyhow::Result<(Url, String)> {
+    let html_path = html_path.as_ref();
+    let absolute_html_path = path::absolute(Path::new(html_path)).with_context(|| {
+        format!(
+            "WebVfx: failed to make HTML path '{}' absolute",
+            html_path.display()
+        )
+    })?;
+    let html = std::fs::read_to_string(&absolute_html_path).with_context(|| {
+        format!(
+            "WebVfx: failed to read HTML path '{}'",
+            absolute_html_path.display()
+        )
+    })?;
+    let url = Url::from_file_path(&absolute_html_path).map_err(|()| {
+        anyhow::anyhow!(
+            "WebVfx: failed to convert HTML path '{}' to file: URL",
+            absolute_html_path.display()
+        )
+    })?;
+    if let Some(json_path) = json_path {
+        let json_path = json_path.as_ref();
+        let json_str = std::fs::read_to_string(json_path).with_context(|| {
+            format!("WebVfx: failed to read JSON path '{}'", json_path.display())
+        })?;
+        let json_value: serde_json::Value = serde_json::from_str(&json_str).with_context(|| {
+            format!(
+                "WebVfx: failed to parse JSON path '{}'",
+                json_path.display()
+            )
+        })?;
+        let context = tera::Context::from_value(json_value).with_context(|| {
+            format!(
+                "WebVfx: failed to configure template context from JSON '{}'",
+                json_path.display()
+            )
+        })?;
+        Ok((
+            url,
+            tera::Tera::one_off(&html, &context, true)
+                .context("WebVfx: Failed to render template")?,
+        ))
+    } else {
+        Ok((url, html))
     }
 }

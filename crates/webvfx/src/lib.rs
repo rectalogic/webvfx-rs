@@ -8,4 +8,7 @@ pub use frei0r_rs2;
 pub use plugin::{
     filter::FilterPlugin, mixer2::Mixer2Plugin, mixer3::Mixer3Plugin, source::SourcePlugin,
 };
-pub use renderer::{WEBVFX_CSS_ANIMATION_PROPERTY, WEBVFX_SELECTOR_PREFIX, net::FileProvider};
+pub use renderer::{
+    WEBVFX_CSS_ANIMATION_PROPERTY, WEBVFX_SELECTOR_PREFIX, net::FileProvider,
+    processor::process_template,
+};
