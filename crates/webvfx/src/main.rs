@@ -49,6 +49,9 @@ struct Args {
 }
 
 fn main() {
+    #[cfg(feature = "tracing")]
+    tracing_subscriber::fmt::init();
+
     let args: Args = argh::from_env();
 
     let (url, html) = match process_template(&args.html, args.json) {

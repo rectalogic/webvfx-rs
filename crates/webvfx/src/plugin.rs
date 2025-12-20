@@ -129,6 +129,9 @@ where
     }
 
     fn new(width: usize, height: usize) -> Self {
+        #[cfg(feature = "tracing")]
+        tracing_subscriber::fmt::init();
+
         WebVfxPlugin::new(width as u32, height as u32)
     }
 }
