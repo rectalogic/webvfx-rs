@@ -14,7 +14,7 @@ use blitz_shell::{
 };
 use blitz_traits::net::Url;
 use webvfx::{
-    FileProvider, WEBVFX_CSS_ANIMATION_PROPERTY, WEBVFX_SELECTOR_PREFIX, process_template,
+    SyncNetProvider, WEBVFX_CSS_ANIMATION_PROPERTY, WEBVFX_SELECTOR_PREFIX, process_template,
 };
 use winit::dpi::LogicalSize;
 
@@ -74,7 +74,7 @@ fn main() {
                 ",
                 args.animation_duration
             )]),
-            net_provider: Some(Arc::new(FileProvider)),
+            net_provider: Some(Arc::new(SyncNetProvider::new())),
             ..Default::default()
         },
     );

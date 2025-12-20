@@ -9,6 +9,6 @@ pub use plugin::{
     filter::FilterPlugin, mixer2::Mixer2Plugin, mixer3::Mixer3Plugin, source::SourcePlugin,
 };
 pub use renderer::{
-    WEBVFX_CSS_ANIMATION_PROPERTY, WEBVFX_SELECTOR_PREFIX, net::FileProvider,
+    WEBVFX_CSS_ANIMATION_PROPERTY, WEBVFX_SELECTOR_PREFIX, net::SyncNetProvider,
     processor::process_template,
 };

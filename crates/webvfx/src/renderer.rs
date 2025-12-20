@@ -59,7 +59,7 @@ impl<const S: usize> WebVfxRenderer<S> {
             DocumentConfig {
                 base_url: Some(base_url.as_str().into()),
                 ua_stylesheets: Some(vec![css_properties]),
-                net_provider: Some(Arc::new(net::FileProvider)),
+                net_provider: Some(Arc::new(net::SyncNetProvider::new())),
                 viewport: Some(Viewport::new(width, height, 1.0, ColorScheme::Light)),
                 ..Default::default()
             },
