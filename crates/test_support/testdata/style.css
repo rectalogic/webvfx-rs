@@ -1,0 +1,21 @@
+@font-face {
+    /* XXX Blitz ignores font-family, must use the name embedded in the woff */
+    font-family: "Open Sans";
+    /* XXX Blitz only loads fonts if in external stylesheet https://github.com/DioxusLabs/blitz/issues/309 */
+    /* https://fontsource.org/fonts/open-sans */
+    src: url("open-sans-latin-400-normal.woff2") format("woff2");
+}
+html,
+body,
+main {
+    height: 100%;
+    font-family: Open Sans;
+    margin: 0;
+    background: #f4e8d2;
+}
+header {
+    background-color: white;
+}
+img {
+    object-fit: contain;
+}
