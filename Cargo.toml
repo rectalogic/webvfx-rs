@@ -7,6 +7,7 @@ members = [
     "crates/webvfx_mixer3",
     "crates/webvfx_source",
     "crates/test_support",
+    "crates/xtask",
 ]
 
 [workspace.package]
@@ -18,6 +19,9 @@ description = "frei0r plugins that implement visual effects using HTML"
 readme = "README.md"
 keywords = ["frei0r", "video", "html", "vfx"]
 categories = ["multimedia", "multimedia::video"]
+
+[workspace.dependencies]
+anyhow = "1.0.100"
 
 [profile.release]
 lto = true

@@ -16,7 +16,7 @@ required-features = ["anyrender_vello"]
 
 [dependencies]
 frei0r-rs2 = { git = "https://github.com/rectalogic/frei0r-rs.git", tag = "2.3.0" }
-anyhow = "1.0.100"
+anyhow = { workspace = true }
 cfg-if = "1.0.4"
 data-url = "0.3.2"
 anyrender = "0.6.2"

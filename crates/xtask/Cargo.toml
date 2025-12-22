@@ -1,5 +1,5 @@
 [package]
-name = "webvfx_mixer2"
+name = "xtask"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,15 +8,8 @@ description.workspace = true
 repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
-
-[lib]
-crate-type = ["cdylib"]
+publish = false
 
 [dependencies]
-webvfx = { path = "../webvfx" }
-
-[dev-dependencies]
-test_support = { path = "../test_support" }
-
-[lints]
-workspace = true
+glob = "0.3.3"
+anyhow = { workspace = true }

@@ -19,7 +19,7 @@ pub struct WebVfxPlugin<K: frei0r_rs2::PluginKind, const S: usize> {
     animation_duration: CString,
     width: u32,
     height: u32,
-    processor: Option<anyhow::Result<RenderProcessor<S>>>,
+    processor: Option<Result<RenderProcessor<S>, ()>>,
     _phantom: PhantomData<K>,
 }
 
@@ -40,8 +40,10 @@ where
     }
 
     fn update(&mut self, time: f64, inframes: [&[u32]; S], outframe: &mut [u32]) {
-        if self.processor.is_none() {
-            match (self.html_path.to_str(), self.json_path.to_str()) {
+        let processor = match self.processor {
+            Some(Ok(ref processor)) => processor,
+            Some(Err(())) => return,
+            None => match (self.html_path.to_str(), self.json_path.to_str()) {
                 (Ok(html_path), Ok(json_path)) => {
                     let json_path = if json_path.is_empty() {
                         None
@@ -57,28 +59,31 @@ where
                         self.width,
                         self.height,
                     );
-                    if let Err(ref e) = processor {
-                        eprintln!("WebVfx: failed to create renderer: {e:?}");
+                    match processor {
+                        Err(e) => {
+                            eprintln!("WebVfx: failed to create renderer: {e:?}");
+                            self.processor = Some(Err(()));
+                            return;
+                        }
+                        Ok(processor) => {
+                            self.processor = Some(Ok(processor));
+                            self.processor.as_ref().unwrap().as_ref().unwrap()
+                        }
                     }
-                    self.processor = Some(processor);
                 }
-                (Err(e), _) => {
+                (Err(_), _) => {
                     eprintln!("WebVfx: invalid html_path `{:?}'", self.html_path);
-                    self.processor = Some(Err(e.into()));
+                    self.processor = Some(Err(()));
                     return;
                 }
-                (_, Err(e)) => {
+                (_, Err(_)) => {
                     eprintln!("WebVfx: invalid json_path `{:?}'", self.json_path);
-                    self.processor = Some(Err(e.into()));
+                    self.processor = Some(Err(()));
                     return;
                 }
-            }
-        }
-        let processor = match self.processor {
-            Some(Ok(ref processor)) => processor,
-            Some(Err(_)) => return,
-            None => unreachable!(),
+            },
         };
+
         if let Err(e) = processor.update(time, inframes, outframe) {
             eprintln!("WebVfx: failed to render frame: {e:?}");
         }
