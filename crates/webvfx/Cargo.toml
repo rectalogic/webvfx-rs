@@ -33,12 +33,12 @@ tracing-subscriber = { version = "0.3.22", optional = true }
 
 # Don't depend on blitz meta-crate
 # https://github.com/DioxusLabs/blitz/issues/301
-blitz-dom = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false, features = ["svg", "system_fonts", "woff-rust"] }
-blitz-paint = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false, features = ["svg"] }
-blitz-traits = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
-blitz-html = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
-blitz-net = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
-blitz-shell = { git = "https://github.com/DioxusLabs/blitz.git", rev = "60be177", default-features = false }
+blitz-dom = { git = "https://github.com/DioxusLabs/blitz.git", rev = "c2baee9", default-features = false, features = ["svg", "system_fonts", "woff-rust"] }
+blitz-paint = { git = "https://github.com/DioxusLabs/blitz.git", rev = "c2baee9", default-features = false, features = ["svg"] }
+blitz-traits = { git = "https://github.com/DioxusLabs/blitz.git", rev = "c2baee9", default-features = false }
+blitz-html = { git = "https://github.com/DioxusLabs/blitz.git", rev = "c2baee9", default-features = false }
+blitz-net = { git = "https://github.com/DioxusLabs/blitz.git", rev = "c2baee9", default-features = false }
+blitz-shell = { git = "https://github.com/DioxusLabs/blitz.git", rev = "c2baee9", default-features = false }
 reqwest = { version = "0.12.26", features = ["blocking"] }
 
 [dev-dependencies]
