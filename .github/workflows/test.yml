@@ -20,6 +20,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libfontconfig1-dev
+
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
 
@@ -58,6 +64,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libfontconfig1-dev
+
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
@@ -87,6 +99,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libfontconfig1-dev
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
