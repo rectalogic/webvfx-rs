@@ -21,12 +21,14 @@ pub mod net;
 pub mod processor;
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "anyrender_vello")] {
-        type AnyRender = anyrender_vello::VelloImageRenderer;
-    } else if #[cfg(feature = "anyrender_vello_cpu")] {
+    if #[cfg(feature = "anyrender_vello_cpu")] {
         type AnyRender = anyrender_vello_cpu::VelloCpuImageRenderer;
-    }else if #[cfg(feature = "anyrender_skia")] {
+    }
+    else if #[cfg(feature = "anyrender_skia")] {
         type AnyRender = anyrender_skia::SkiaImageRenderer;
+    }
+    else if #[cfg(feature = "anyrender_vello")] {
+        type AnyRender = anyrender_vello::VelloImageRenderer;
     }
 }
 
@@ -166,7 +168,7 @@ mod tests {
         renderer: &mut WebVfxRenderer<S>,
         inframe_paths: [&Path; S],
         output: &mut RgbaImage,
-        reference_path: &Path,
+        reference_file: &str,
     ) {
         let inframes = inframe_paths.map(read_image);
         let inframe_refs: [&[u8]; S] = inframes
@@ -180,32 +182,20 @@ mod tests {
             inframe_refs,
             output.as_flat_samples_mut().image_mut_slice().unwrap(),
         );
-        assert_reference(reference_path, output);
+        assert_reference(reference_file, output);
     }
 
     #[test]
     fn test_source() {
         let (mut r, mut output) = init_renderer::<0>("source.html", None);
-        render(
-            0.0,
-            &mut r,
-            [],
-            &mut output,
-            &testdata!().join("source-1.png"),
-        );
+        render(0.0, &mut r, [], &mut output, "source-1.png");
     }
 
     #[test]
     fn test_source_template() {
         let (mut r, mut output) =
             init_renderer::<0>("source-template.html", Some("source-template.json"));
-        render(
-            0.0,
-            &mut r,
-            [],
-            &mut output,
-            &testdata!().join("source-template-1.png"),
-        );
+        render(0.0, &mut r, [], &mut output, "source-template-1.png");
     }
 
     #[test]
@@ -216,21 +206,21 @@ mod tests {
             &mut r,
             [&testdata!().join("a-320x240.png")],
             &mut output,
-            &testdata!().join("filter-1.png"),
+            "filter-1.png",
         );
         render(
             1.0,
             &mut r,
             [&testdata!().join("b-320x240.png")],
             &mut output,
-            &testdata!().join("filter-2.png"),
+            "filter-2.png",
         );
         render(
             2.0,
             &mut r,
             [&testdata!().join("a-320x240.png")],
             &mut output,
-            &testdata!().join("filter-3.png"),
+            "filter-3.png",
         );
     }
 
@@ -245,7 +235,7 @@ mod tests {
                 &testdata!().join("b-320x240.png"),
             ],
             &mut output,
-            &testdata!().join("mixer2-1.png"),
+            "mixer2-1.png",
         );
         render(
             1.0,
@@ -255,7 +245,7 @@ mod tests {
                 &testdata!().join("a-320x240.png"),
             ],
             &mut output,
-            &testdata!().join("mixer2-2.png"),
+            "mixer2-2.png",
         );
         render(
             2.0,
@@ -265,11 +255,11 @@ mod tests {
                 &testdata!().join("b-320x240.png"),
             ],
             &mut output,
-            &testdata!().join("mixer2-3.png"),
+            "mixer2-3.png",
         );
     }
 
-    fn test_mixer3_base(html_file: &str, reference_paths: [&str; 3]) {
+    fn test_mixer3_base(html_file: &str, reference_files: [&str; 3]) {
         let (mut r, mut output) = init_renderer::<3>(html_file, None);
         render(
             0.0,
@@ -280,7 +270,7 @@ mod tests {
                 &testdata!().join("c-320x240.png"),
             ],
             &mut output,
-            &testdata!().join(reference_paths[0]),
+            reference_files[0],
         );
         render(
             1.0,
@@ -291,7 +281,7 @@ mod tests {
                 &testdata!().join("b-320x240.png"),
             ],
             &mut output,
-            &testdata!().join(reference_paths[1]),
+            reference_files[1],
         );
         render(
             3.0,
@@ -302,7 +292,7 @@ mod tests {
                 &testdata!().join("a-320x240.png"),
             ],
             &mut output,
-            &testdata!().join(reference_paths[2]),
+            reference_files[2],
         );
     }
 

@@ -18,7 +18,7 @@ required-features = ["anyrender_vello"]
 [dependencies]
 frei0r-rs2 = { git = "https://github.com/rectalogic/frei0r-rs.git", tag = "2.3.0" }
 anyhow = { workspace = true }
-cfg-if = "1.0.4"
+cfg-if = { workspace = true }
 data-url = "0.3.2"
 anyrender = "0.6.2"
 anyrender_vello = { version = "0.6.1", default-features = false, optional = true }
@@ -47,9 +47,9 @@ test_support = { path = "../test_support" }
 
 [features]
 default = ["anyrender_vello"]
-anyrender_vello = ["dep:anyrender_vello"]
-anyrender_vello_cpu = ["dep:anyrender_vello_cpu"]
-anyrender_skia = ["dep:anyrender_skia"]
+anyrender_vello = ["dep:anyrender_vello", "test_support/anyrender_vello"]
+anyrender_vello_cpu = ["dep:anyrender_vello_cpu", "test_support/anyrender_vello_cpu"]
+anyrender_skia = ["dep:anyrender_skia", "test_support/anyrender_skia"]
 tracing = ["blitz-dom/tracing", "blitz-paint/tracing", "blitz-shell/tracing", "dep:tracing-subscriber"]
 
 [lints]

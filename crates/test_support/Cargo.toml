@@ -10,8 +10,14 @@ categories.workspace = true
 readme = "README.md"
 publish = false
 
+[features]
+anyrender_vello = []
+anyrender_vello_cpu = []
+anyrender_skia = []
+
 [dependencies]
 testdir = "0.9.3"
+cfg-if = { workspace = true }
 image = { version = "0.25", default-features = false, features = ["png"] }  # Version required by blitz-dom
 webvfx = { path = "../webvfx" }
 

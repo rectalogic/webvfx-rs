@@ -4530,6 +4530,7 @@ dependencies = [
 name = "test_support"
 version = "0.1.0"
 dependencies = [
+ "cfg-if",
  "image",
  "testdir",
  "webvfx",

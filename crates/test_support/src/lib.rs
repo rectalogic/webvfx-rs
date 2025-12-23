@@ -27,10 +27,22 @@ pub fn read_image(path: &Path) -> Vec<u8> {
     }
 }
 
-pub fn assert_reference(reference_path: &Path, output: &RgbaImage) {
-    let fail_path = testdir!().join(reference_path.file_name().unwrap());
-    if reference_path.exists() {
-        if output.as_flat_samples().image_slice().unwrap() != read_image(reference_path).as_slice()
+pub fn assert_reference(reference_file: &str, output: &RgbaImage) {
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "anyrender_vello_cpu")] {
+            let reference_dir = "output/anyrender_vello_cpu";
+        }
+        else if #[cfg(feature = "anyrender_skia")] {
+            let reference_dir = "output/anyrender_skia";
+        }
+        else if #[cfg(feature = "anyrender_vello")] {
+            let reference_dir = "output/anyrender_vello";
+        }
+    }
+    let reference_file = testdata!().join(reference_dir).join(reference_file);
+    let fail_path = testdir!().join(reference_file.file_name().unwrap());
+    if reference_file.exists() {
+        if output.as_flat_samples().image_slice().unwrap() != read_image(&reference_file).as_slice()
         {
             output.save(&fail_path).unwrap();
             panic!(
@@ -41,7 +53,8 @@ pub fn assert_reference(reference_path: &Path, output: &RgbaImage) {
     } else {
         output.save(&fail_path).unwrap();
         panic!(
-            "Reference not found, render saved to {}",
+            "Reference '{}' not found, render saved to '{}'",
+            reference_file.display(),
             fail_path.display()
         );
     }
@@ -65,7 +78,7 @@ pub fn assert_output(reference_file: &str, output: &Vec<u32>) {
         )
     };
     let output = RgbaImage::from_raw(WIDTH, HEIGHT, bytes.into()).unwrap();
-    assert_reference(&testdata!().join(reference_file), &output);
+    assert_reference(reference_file, &output);
 }
 
 pub fn read_image_u32(filename: &str) -> Vec<u32> {

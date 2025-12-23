@@ -13,9 +13,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         features:
-          - "--features anyrender_vello --no-default-features"
-          - "--features anyrender_vello_cpu --no-default-features"
-          - "--features anyrender_skia --no-default-features"
+          - "--features anyrender_vello"
+          - "--features anyrender_vello_cpu"
+          - "--features anyrender_skia"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +39,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Check with features ${{ matrix.features }}
-        run: cargo check --locked --workspace ${{ matrix.features }}
+        run: cargo check --locked --workspace --no-default-features ${{ matrix.features }}
 
   fmt:
     name: Format
@@ -93,9 +93,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         features:
-          # - "--features anyrender_vello --no-default-features"
-          - "--features anyrender_vello_cpu --no-default-features"
-          - "--features anyrender_skia --no-default-features"
+          # - "--features anyrender_vello"
+          - "--features anyrender_vello_cpu"
+          - "--features anyrender_skia"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -119,4 +119,4 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run tests with features ${{ matrix.features }}
-        run: cargo test --locked --workspace ${{ matrix.features }}
+        run: cargo test --locked --workspace --no-default-features ${{ matrix.features }}
