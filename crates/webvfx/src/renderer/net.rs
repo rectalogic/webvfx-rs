@@ -24,7 +24,13 @@ impl SyncNetProvider {
                 Ok(Bytes::from(decoded.0))
             }
             "file" => {
-                let file_content = std::fs::read(request.url.path())?;
+                let file_content = std::fs::read(
+                    request
+                        .url
+                        .to_file_path()
+                        .map_err(|()| anyhow::anyhow!("cannot convert URL to path"))?,
+                )?;
+
                 Ok(Bytes::from(file_content))
             }
             _ => {
@@ -50,7 +56,7 @@ impl NetProvider for SyncNetProvider {
     fn fetch(&self, _doc_id: usize, request: Request, handler: Box<dyn NetHandler>) {
         let url = request.url.to_string();
         match self.fetch_inner(request) {
-            Err(e) => eprintln!("Failed to fetch url {url}: {e:?}"),
+            Err(e) => eprintln!("WebVfx: failed to fetch url {url}: {e:?}"),
             Ok(bytes) => handler.bytes(url, bytes),
         }
     }
