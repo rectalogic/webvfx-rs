@@ -1,7 +1,6 @@
 @font-face {
     /* XXX Blitz ignores font-family, must use the name embedded in the woff */
     font-family: "Open Sans";
-    /* XXX Blitz only loads fonts if in external stylesheet https://github.com/DioxusLabs/blitz/issues/309 */
     /* https://fontsource.org/fonts/open-sans */
     src: url("open-sans-latin-400-normal.woff2") format("woff2");
 }

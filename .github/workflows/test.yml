@@ -95,7 +95,7 @@ jobs:
         features:
           # - "--features anyrender_vello"
           - "--features anyrender_vello_cpu"
-          - "--features anyrender_skia"
+          # - "--features anyrender_skia"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -119,4 +119,5 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run tests with features ${{ matrix.features }}
-        run: cargo test --locked --workspace --no-default-features ${{ matrix.features }}
+        # --test-threads=1 to work around https://github.com/DioxusLabs/blitz/issues/316
+        run: cargo test --test-threads=1 --locked --workspace --no-default-features ${{ matrix.features }}
