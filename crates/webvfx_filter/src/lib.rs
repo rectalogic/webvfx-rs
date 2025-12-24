@@ -7,16 +7,18 @@ frei0r_rs2::plugin!(FilterPlugin);
 
 #[cfg(test)]
 mod tests {
+    use std::ffi::c_void;
+
     use super::*;
-    use test_support::{
-        HEIGHT, WIDTH, assert_output, param_cstring, param_string_ptr, read_image_u32,
-    };
+    use test_support::{HEIGHT, WIDTH, assert_output, param_cstring, read_image_u32};
 
     #[test]
     fn test_filter() {
         let plugin = f0r_construct(WIDTH, HEIGHT);
         let html_path = param_cstring("filter.html");
-        f0r_set_param_value(plugin, param_string_ptr(&html_path), 0);
+        let html_ptr = html_path.as_ptr();
+        let html_param = &raw const html_ptr as *mut c_void;
+        f0r_set_param_value(plugin, html_param, 0);
         let mut output = vec![0u32; (WIDTH * HEIGHT) as usize];
         let inframe = read_image_u32("a-320x240.png");
         unsafe { f0r_update(plugin, 0.0, inframe.as_ptr(), output.as_mut_ptr()) };

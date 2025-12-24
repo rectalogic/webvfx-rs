@@ -4,9 +4,7 @@ use image::ImageReader;
 pub use image::RgbaImage;
 use testdir::testdir;
 
-use std::ffi::{CString, c_void};
-
-use webvfx::frei0r_rs2::ffi::f0r_param_t;
+use std::ffi::CString;
 
 pub const WIDTH: u32 = 320;
 pub const HEIGHT: u32 = 240;
@@ -62,11 +60,6 @@ pub fn assert_reference(reference_file: &str, output: &RgbaImage) {
 
 pub fn param_cstring(filename: &str) -> CString {
     CString::new(testdata!().join(filename).to_str().unwrap()).unwrap()
-}
-
-#[allow(clippy::ref_as_ptr)]
-pub fn param_string_ptr(string: &CString) -> f0r_param_t {
-    (&(string.as_ptr() as *mut c_void) as *const *mut c_void) as f0r_param_t
 }
 
 pub fn assert_output(reference_file: &str, output: &Vec<u32>) {
