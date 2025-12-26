@@ -119,5 +119,4 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run tests with features ${{ matrix.features }}
-        # --test-threads=1 to work around https://github.com/DioxusLabs/blitz/issues/316
-        run: cargo test --locked --workspace --no-default-features ${{ matrix.features }} -- --test-threads=1
+        run: cargo test --locked --workspace --no-default-features ${{ matrix.features }}
