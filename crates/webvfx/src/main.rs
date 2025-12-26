@@ -23,6 +23,10 @@ use winit::dpi::LogicalSize;
 #[allow(clippy::doc_markdown)]
 /// WebVfx HTML viewer
 struct Args {
+    #[argh(switch)]
+    /// dump generated template
+    dump: bool,
+
     #[argh(option, default = "640")]
     /// width of browser window
     width: usize,
@@ -61,6 +65,10 @@ fn main() {
             exit(1);
         }
     };
+
+    if args.dump {
+        println!("{html}");
+    }
 
     let mut document = HtmlDocument::from_html(
         &html,
