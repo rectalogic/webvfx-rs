@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 use std::{
     path::{self, Path, PathBuf},
-    process::exit,
     sync::Arc,
 };
 
@@ -52,19 +51,13 @@ struct Args {
     html: String,
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     #[cfg(feature = "tracing")]
     tracing_subscriber::fmt::init();
 
     let args: Args = argh::from_env();
 
-    let (url, html) = match process_template(&args.html, args.json) {
-        Ok(result) => result,
-        Err(e) => {
-            eprintln!("{e}");
-            exit(1);
-        }
-    };
+    let (url, html) = process_template(&args.html, args.json)?;
 
     if args.dump {
         println!("{html}");
@@ -121,6 +114,7 @@ fn main() {
     application.add_window(window);
 
     event_loop.run_app(&mut application).unwrap();
+    Ok(())
 }
 
 fn path_url(path: &str) -> anyhow::Result<(Url, PathBuf)> {

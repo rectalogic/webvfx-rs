@@ -11,6 +11,7 @@ readme = "README.md"
 publish = false
 
 [features]
+default = ["anyrender_vello"]
 anyrender_vello = []
 anyrender_vello_cpu = []
 anyrender_skia = []

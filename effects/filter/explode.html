@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Explode</title>
+        <style>
+            /* Reset and basic setup */
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                width: 100%;
+                background-color: #000; /* Dark background for letterboxing */
+                overflow: hidden; /* Prevent scrollbars during animation */
+                font-family: Arial, sans-serif;
+            }
+
+            img {
+                display: block;
+                width: 100vw;
+                height: 100vh;
+                object-fit: contain;
+            }
+
+            .exploding-text {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                overflow: hidden;
+                color: #888;
+                font-size: 10vh;
+                font-weight: bold;
+                white-space: nowrap;
+                align-items: center;
+                justify-content: center;
+            }
+            .exploding-text span {
+                position: relative;
+                display: inline-block;
+                animation: explode var(--webvfx-animation-duration) ease-out forwards;
+            }
+
+            @keyframes explode {
+                0% {
+                    transform: translate(0, 0) scale(1);
+                    opacity: 1;
+                }
+                15% {
+                    transform: translate(0, 0) scale(1);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translate(var(--x), var(--y)) scale(var(--scale));
+                    opacity: 0;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <img class="webvfx-video1" />
+        <div class="exploding-text">
+            {% for letter in content %}
+                {% set x = get_random(start=-100, end=100) %}
+                {% set y = get_random(start=-100, end=100) %}
+                {% set scale = get_random(start=0, end=100) / 50 %}
+            <span style="--x: {{ x }}vw; --y: {{ y }}vh; --scale: {{ scale }}"
+                >{{ letter }}</span
+            >
+            {% endfor %}
+        </div>
+    </body>
+</html>

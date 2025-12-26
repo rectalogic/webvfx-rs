@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Banner</title>
+        <style>
+            /* Reset and basic setup */
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                width: 100%;
+                background-color: #000; /* Dark background for letterboxing */
+                overflow: hidden; /* Prevent scrollbars during animation */
+                font-family: Arial, sans-serif;
+            }
+
+            img {
+                display: block;
+                width: 100vw;
+                height: 100vh;
+                object-fit: contain;
+            }
+
+            .banner {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 33.33vh; /* Bottom third */
+                background-color: rgba(50, 50, 50, 0.85); /* Grey translucent */
+                display: flex;
+                overflow: hidden; /* Clip the text when it slides out */
+
+                /* Initial State */
+                opacity: 0;
+
+                animation: banner-fade var(--webvfx-animation-duration) linear
+                    forwards;
+            }
+
+            .scrolling-text {
+                color: #fff;
+                font-size: 10vh;
+                font-weight: bold;
+                white-space: nowrap;
+
+                animation: text-scroll var(--webvfx-animation-duration) linear
+                    forwards;
+            }
+
+            @keyframes banner-fade {
+                0% {
+                    opacity: 0;
+                }
+                10% {
+                    opacity: 1;
+                }
+                90% {
+                    opacity: 1;
+                }
+                100% {
+                    opacity: 0;
+                }
+            }
+
+            @keyframes text-scroll {
+                0% {
+                    transform: translateX(100vw);
+                }
+                10% {
+                    transform: translateX(100vw);
+                }
+                90% {
+                    transform: translateX(-100%);
+                }
+                100% {
+                    transform: translateX(-100%);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <img class="webvfx-video1" />
+        <div class="banner">
+            <div class="scrolling-text">{{content}}</div>
+        </div>
+    </body>
+</html>
