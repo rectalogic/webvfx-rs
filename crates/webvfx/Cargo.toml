@@ -20,13 +20,13 @@ frei0r-rs2 = { git = "https://github.com/rectalogic/frei0r-rs.git", tag = "2.3.0
 anyhow = { workspace = true }
 cfg-if = { workspace = true }
 data-url = "0.3.2"
-anyrender = "0.6.2"
-anyrender_vello = { version = "0.6.1", default-features = false, optional = true }
-anyrender_vello_cpu = { version = "0.8.1", default-features = false, optional = true }
-anyrender_skia = { version = "0.2.0", default-features = false, optional = true }
+anyrender = "0.13.0"
+anyrender_vello = { version = "0.14.0", default-features = false, optional = true }
+anyrender_vello_cpu = { version = "0.17.0", default-features = false, optional = true }
+anyrender_skia = { version = "0.11.0", default-features = false, optional = true }
 linebender_resource_handle = "0.1"
-winit = "0.30"
-smallvec = "1.15"
+winit = { version = "=0.31.0-beta.3" } # match blitz requirement
+smallvec = "1.16"
 argh = "0.1"
 serde_json = "1.0.145"
 tera = "1.20.1"
@@ -34,13 +34,13 @@ tracing-subscriber = { version = "0.3.22", optional = true }
 
 # Don't depend on blitz meta-crate
 # https://github.com/DioxusLabs/blitz/issues/301
-blitz-dom = { git = "https://github.com/DioxusLabs/blitz.git", rev = "0bd2f53", default-features = false, features = ["svg", "system_fonts", "woff-rust"] }
-blitz-paint = { git = "https://github.com/DioxusLabs/blitz.git", rev = "0bd2f53", default-features = false, features = ["svg"] }
-blitz-traits = { git = "https://github.com/DioxusLabs/blitz.git", rev = "0bd2f53", default-features = false }
-blitz-html = { git = "https://github.com/DioxusLabs/blitz.git", rev = "0bd2f53", default-features = false }
-blitz-net = { git = "https://github.com/DioxusLabs/blitz.git", rev = "0bd2f53", default-features = false }
-blitz-shell = { git = "https://github.com/DioxusLabs/blitz.git", rev = "0bd2f53", default-features = false }
-reqwest = { version = "0.12.26", features = ["blocking"] }
+blitz-dom = { git = "https://github.com/DioxusLabs/blitz.git", rev = "c20690f", default-features = false, features = ["svg", "system-fonts", "woff"] }
+blitz-paint = { git = "https://github.com/DioxusLabs/blitz.git", rev = "c20690f", default-features = false, features = ["svg"] }
+blitz-traits = { git = "https://github.com/DioxusLabs/blitz.git", rev = "c20690f", default-features = false }
+blitz-html = { git = "https://github.com/DioxusLabs/blitz.git", rev = "c20690f", default-features = false }
+blitz-net = { git = "https://github.com/DioxusLabs/blitz.git", rev = "c20690f", default-features = false }
+blitz-shell = { git = "https://github.com/DioxusLabs/blitz.git", rev = "c20690f", default-features = false }
+reqwest = { version = "0.13", features = ["blocking"] }
 
 [dev-dependencies]
 test_support = { path = "../test_support" }

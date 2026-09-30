@@ -8,14 +8,12 @@ use std::{
 use argh::FromArgs;
 use blitz_dom::{DocumentConfig, qual_name};
 use blitz_html::HtmlDocument;
-use blitz_shell::{
-    BlitzApplication, BlitzShellEvent, Window, WindowConfig, create_default_event_loop,
-};
+use blitz_shell::{BlitzApplication, BlitzShellProxy, WindowConfig, create_default_event_loop};
 use blitz_traits::net::Url;
 use webvfx::{
     SyncNetProvider, WEBVFX_CSS_ANIMATION_PROPERTY, WEBVFX_SELECTOR_PREFIX, process_template,
 };
-use winit::dpi::LogicalSize;
+use winit::{dpi::LogicalSize, window::WindowAttributes};
 
 #[derive(FromArgs)]
 #[argh(help_triggers("-h", "--help", "help"))]
@@ -103,17 +101,18 @@ fn main() -> anyhow::Result<()> {
     let window = WindowConfig::with_attributes(
         Box::new(document) as _,
         renderer,
-        #[allow(clippy::cast_precision_loss)]
-        Window::default_attributes()
-            .with_inner_size(LogicalSize::new(args.width as f64, args.height as f64))
+        #[expect(clippy::cast_precision_loss)]
+        WindowAttributes::default()
+            .with_surface_size(LogicalSize::new(args.width as f64, args.height as f64))
             .with_title("WebVfx Viewer"),
     );
 
-    let event_loop = create_default_event_loop::<BlitzShellEvent>();
-    let mut application = BlitzApplication::new(event_loop.create_proxy());
+    let event_loop = create_default_event_loop();
+    let (proxy, receiver) = BlitzShellProxy::new(event_loop.create_proxy());
+    let mut application = BlitzApplication::new(proxy, receiver);
     application.add_window(window);
 
-    event_loop.run_app(&mut application).unwrap();
+    event_loop.run_app(application).unwrap();
     Ok(())
 }
 

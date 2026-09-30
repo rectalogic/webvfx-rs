@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use anyrender::{ImageRenderer, PaintScene};
 use blitz_dom::{
-    DocumentConfig,
+    DocumentConfig, NodeId,
     node::{ImageData, RasterImageData, SpecialElementData},
 };
 use blitz_html::HtmlDocument;
@@ -33,7 +33,7 @@ cfg_if::cfg_if! {
 }
 
 // Node ID mapped to a pair of video frame buffers
-type VideoNode = (SmallVec<[usize; 32]>, [Arc<Vec<u8>>; 2]);
+type VideoNode = (SmallVec<[NodeId; 32]>, [Arc<Vec<u8>>; 2]);
 
 pub const WEBVFX_SELECTOR_PREFIX: &str = "img.webvfx-video";
 pub const WEBVFX_CSS_ANIMATION_PROPERTY: &str = "--webvfx-animation-duration";
@@ -133,7 +133,15 @@ impl<const S: usize> WebVfxRenderer<S> {
         self.renderer.render(
             |scene| {
                 scene.reset();
-                paint_scene(scene, &self.document, 1.0, self.width, self.height);
+                paint_scene(
+                    scene,
+                    &mut self.document,
+                    1.0,
+                    self.width,
+                    self.height,
+                    0,
+                    0,
+                );
             },
             outframe,
         );

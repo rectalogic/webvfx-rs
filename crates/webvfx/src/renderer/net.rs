@@ -38,8 +38,10 @@ impl SyncNetProvider {
                 let mut builder = self
                     .client
                     .request(request.method, request.url)
-                    .headers(request.headers)
-                    .header("Content-Type", request.content_type.as_str());
+                    .headers(request.headers);
+                if let Some(content_type) = request.content_type {
+                    builder = builder.header("Content-Type", content_type.as_str());
+                }
                 if let Body::Bytes(bytes) = request.body {
                     builder = builder.body(bytes);
                 }
