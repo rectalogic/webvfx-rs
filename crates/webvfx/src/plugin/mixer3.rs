@@ -5,22 +5,11 @@ use std::ffi::CStr;
 
 use super::{PluginInfo, WebVfxPlugin};
 
-pub type Mixer3Plugin = WebVfxPlugin<frei0r_rs2::KindMixer3, 3>;
+pub type Mixer3Plugin = WebVfxPlugin<Mixer3Info, 3>;
 
-impl PluginInfo for frei0r_rs2::KindMixer3 {
+pub struct Mixer3Info;
+
+impl PluginInfo for Mixer3Info {
     const NAME: &'static CStr = c"WebVfx mixer3";
     const EXPLANATION: &'static CStr = c"Renders HTML frames with 3 input videos";
-}
-
-impl frei0r_rs2::Mixer3Plugin for Mixer3Plugin {
-    fn update_mixer3(
-        &mut self,
-        time: f64,
-        inframe1: &[u32],
-        inframe2: &[u32],
-        inframe3: &[u32],
-        outframe: &mut [u32],
-    ) {
-        self.update(time, [inframe1, inframe2, inframe3], outframe);
-    }
 }
