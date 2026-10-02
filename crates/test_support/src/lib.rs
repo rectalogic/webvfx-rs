@@ -26,18 +26,7 @@ pub fn read_image(path: &Path) -> Vec<u8> {
 }
 
 pub fn assert_reference(reference_file: &str, output: &RgbaImage) {
-    cfg_if::cfg_if! {
-        if #[cfg(feature = "anyrender_vello_cpu")] {
-            let reference_dir = "output/anyrender_vello_cpu";
-        }
-        else if #[cfg(feature = "anyrender_skia")] {
-            let reference_dir = "output/anyrender_skia";
-        }
-        else if #[cfg(feature = "anyrender_vello")] {
-            let reference_dir = "output/anyrender_vello";
-        }
-    }
-    let reference_file = testdata!().join(reference_dir).join(reference_file);
+    let reference_file = testdata!().join("output").join(reference_file);
     let fail_path = testdir!().join(reference_file.file_name().unwrap());
     if reference_file.exists() {
         if output.as_flat_samples().image_slice().unwrap() != read_image(&reference_file).as_slice()

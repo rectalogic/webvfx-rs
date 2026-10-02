@@ -1,50 +1,228 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use anyrender::{ImageRenderer, PaintScene};
-use blitz_dom::{
-    DocumentConfig, NodeId,
-    node::{ImageData, RasterImageData, SpecialElementData},
-};
+use anyrender_vello::VelloImageRenderer;
+use blitz_dom::{DocumentConfig, IntrinsicSizes, Widget, node::ComputedStyles};
 use blitz_html::HtmlDocument;
 use blitz_paint::paint_scene;
 use blitz_traits::{
     net::Url,
     shell::{ColorScheme, Viewport},
 };
-use linebender_resource_handle::Blob;
-use smallvec::SmallVec;
+use peniko::kurbo::{Affine, Rect, Vec2};
+use peniko::{Extend, Fill, ImageBrush, ImageSampler};
+use style::properties::generated::longhands::object_fit::computed_value::T as ObjectFit;
 
 pub mod net;
 pub mod processor;
 
-cfg_if::cfg_if! {
-    if #[cfg(feature = "anyrender_vello_cpu")] {
-        type AnyRender = anyrender_vello_cpu::VelloCpuImageRenderer;
-    }
-    else if #[cfg(feature = "anyrender_skia")] {
-        type AnyRender = anyrender_skia::SkiaImageRenderer;
-    }
-    else if #[cfg(feature = "anyrender_vello")] {
-        type AnyRender = anyrender_vello::VelloImageRenderer;
+pub const WEBVFX_SELECTOR_PREFIX: &str = "img.webvfx-video";
+pub const WEBVFX_CSS_ANIMATION_PROPERTY: &str = "--webvfx-animation-duration";
+
+/// Shared per-video state. The plugin writes the current frame into `staging`
+/// and bumps `generation`; the widget uploads it to its WGPU texture.
+#[derive(Debug)]
+struct VideoSource {
+    width: u32,
+    height: u32,
+    staging: Vec<u8>,
+    generation: u64,
+}
+
+/// A Blitz custom widget that draws the current video frame from a WGPU texture.
+///
+/// Rendering the frame through a widget-owned texture avoids handing the
+/// frame buffer to Vello as an `ImageData`, so Vello's image cache never
+/// retains the plugin's frame buffers.
+struct VideoWidget {
+    source: Arc<Mutex<VideoSource>>,
+    handle: Option<wgpu_context::DeviceHandle>,
+    texture: Option<wgpu::Texture>,
+    resource: Option<anyrender::ResourceId>,
+    uploaded_generation: Option<u64>,
+}
+
+impl VideoWidget {
+    fn new(source: Arc<Mutex<VideoSource>>) -> Self {
+        Self {
+            source,
+            handle: None,
+            texture: None,
+            resource: None,
+            uploaded_generation: None,
+        }
     }
 }
 
-// Node ID mapped to a pair of video frame buffers
-type VideoNode = (SmallVec<[NodeId; 32]>, [Arc<Vec<u8>>; 2]);
+impl Widget for VideoWidget {
+    fn can_create_surfaces(&mut self, render_ctx: &mut dyn anyrender::RenderContext) {
+        let Some(handle) = render_ctx
+            .renderer_specific_context()
+            .and_then(|ctx| ctx.downcast::<wgpu_context::DeviceHandle>().ok())
+            .map(|handle| *handle)
+        else {
+            return;
+        };
 
-pub const WEBVFX_SELECTOR_PREFIX: &str = "img.webvfx-video";
-pub const WEBVFX_CSS_ANIMATION_PROPERTY: &str = "--webvfx-animation-duration";
+        let (width, height) = {
+            let source = self.source.lock().unwrap();
+            (source.width, source.height)
+        };
+        let texture = handle.device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("webvfx video frame"),
+            size: wgpu::Extent3d {
+                width,
+                height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::COPY_DST
+                | wgpu::TextureUsages::COPY_SRC
+                | wgpu::TextureUsages::TEXTURE_BINDING,
+            view_formats: &[],
+        });
+
+        if let Ok(resource) = render_ctx.try_register_custom_resource(Box::new(texture.clone())) {
+            self.resource = Some(resource);
+        }
+        self.texture = Some(texture);
+        self.handle = Some(handle);
+        self.uploaded_generation = None;
+    }
+
+    fn destroy_surfaces(&mut self) {
+        self.texture = None;
+        self.resource = None;
+        self.handle = None;
+        self.uploaded_generation = None;
+    }
+
+    fn requires_redraw(&self) -> bool {
+        true
+    }
+
+    #[allow(clippy::cast_precision_loss)]
+    fn intrinsic_sizes(&self) -> IntrinsicSizes {
+        let source = self.source.lock().unwrap();
+        let (width, height) = (source.width as f32, source.height as f32);
+        IntrinsicSizes {
+            width: Some(width),
+            height: Some(height),
+            ratio: Some(width / height),
+        }
+    }
+
+    #[allow(clippy::cast_precision_loss)]
+    fn paint(
+        &mut self,
+        _render_ctx: &mut dyn anyrender::RenderContext,
+        styles: &ComputedStyles,
+        width: u32,
+        height: u32,
+        _scale: f64,
+    ) -> anyrender::Scene {
+        let mut scene = anyrender::Scene::new();
+        let (Some(texture), Some(handle), Some(resource)) =
+            (self.texture.as_ref(), self.handle.as_ref(), self.resource)
+        else {
+            return scene;
+        };
+
+        let (vf_width, vf_height) = {
+            let source = self.source.lock().unwrap();
+            if self.uploaded_generation != Some(source.generation) {
+                handle.queue.write_texture(
+                    wgpu::TexelCopyTextureInfo {
+                        texture,
+                        mip_level: 0,
+                        origin: wgpu::Origin3d::ZERO,
+                        aspect: wgpu::TextureAspect::All,
+                    },
+                    &source.staging,
+                    wgpu::TexelCopyBufferLayout {
+                        offset: 0,
+                        bytes_per_row: Some(source.width * 4),
+                        rows_per_image: Some(source.height),
+                    },
+                    wgpu::Extent3d {
+                        width: source.width,
+                        height: source.height,
+                        depth_or_array_layers: 1,
+                    },
+                );
+                self.uploaded_generation = Some(source.generation);
+            }
+            (source.width as f32, source.height as f32)
+        };
+
+        if width == 0 || height == 0 || vf_width == 0.0 || vf_height == 0.0 {
+            return scene;
+        }
+
+        // Match Blitz's `draw_image` object-fit/object-position behaviour.
+        let container = (width as f32, height as f32);
+        let object = (vf_width, vf_height);
+        let paint_size = compute_object_fit(container, object, styles.clone_object_fit());
+        let offset = (
+            (container.0 - paint_size.0) / 2.0,
+            (container.1 - paint_size.1) / 2.0,
+        );
+        let transform = Affine::scale_non_uniform(
+            f64::from(paint_size.0) / f64::from(object.0),
+            f64::from(paint_size.1) / f64::from(object.1),
+        )
+        .then_translate(Vec2::new(f64::from(offset.0), f64::from(offset.1)));
+
+        let brush = ImageBrush {
+            image: resource,
+            sampler: ImageSampler {
+                x_extend: Extend::Repeat,
+                y_extend: Extend::Repeat,
+                quality: peniko::ImageQuality::Medium,
+                alpha: 1.0,
+            },
+        };
+        scene.fill(
+            Fill::NonZero,
+            transform,
+            &anyrender::Paint::Resource(brush),
+            None,
+            &Rect::new(0.0, 0.0, f64::from(object.0), f64::from(object.1)),
+        );
+        scene
+    }
+}
+
+/// Mirrors `blitz_paint`'s object-fit sizing (CSS Images 3).
+fn compute_object_fit(container: (f32, f32), object: (f32, f32), fit: ObjectFit) -> (f32, f32) {
+    let contain = (container.0 / object.0).min(container.1 / object.1);
+    match fit {
+        ObjectFit::None => object,
+        ObjectFit::Fill => container,
+        ObjectFit::Cover => {
+            let ratio = (container.0 / object.0).max(container.1 / object.1);
+            (object.0 * ratio, object.1 * ratio)
+        }
+        ObjectFit::Contain => (object.0 * contain, object.1 * contain),
+        ObjectFit::ScaleDown => {
+            let scaled = (object.0 * contain, object.1 * contain);
+            if object.0 < scaled.0 { object } else { scaled }
+        }
+    }
+}
 
 struct WebVfxRenderer<const S: usize> {
     width: u32,
     height: u32,
     document: HtmlDocument,
-    renderer: AnyRender,
-    video_nodes: [Option<VideoNode>; S],
-    video_node_index: usize,
+    renderer: VelloImageRenderer,
+    video_sources: [Option<Arc<Mutex<VideoSource>>>; S],
 }
 
 impl<const S: usize> WebVfxRenderer<S> {
@@ -66,68 +244,50 @@ impl<const S: usize> WebVfxRenderer<S> {
                 ..Default::default()
             },
         );
-        let video_nodes: [Option<VideoNode>; S] = (0..S)
+        let video_sources: [Option<Arc<Mutex<VideoSource>>>; S] = (0..S)
             .map(|i| {
-                if let Ok(node_ids) =
+                let Ok(node_ids) =
                     document.query_selector_all(&format!("{}{}", WEBVFX_SELECTOR_PREFIX, i + 1))
-                    && !node_ids.is_empty()
-                {
-                    let frame = vec![0u8; (width * height * 4) as usize];
-                    let frame_arc = Arc::new(frame.clone());
-                    node_ids.iter().copied().for_each(|node_id| {
-                        if let Some(node) = document.get_node_mut(node_id)
-                            && let Some(element_data) = node.element_data_mut()
-                        {
-                            element_data.special_data =
-                                SpecialElementData::Image(Box::new(ImageData::Raster(
-                                    RasterImageData::new(width, height, frame_arc.clone()),
-                                )));
-                        }
-                    });
-                    Some((node_ids, [frame_arc, Arc::new(frame)]))
-                } else {
-                    None
+                else {
+                    return None;
+                };
+                if node_ids.is_empty() {
+                    return None;
                 }
+                let source = Arc::new(Mutex::new(VideoSource {
+                    width,
+                    height,
+                    staging: vec![0u8; (width * height * 4) as usize],
+                    generation: 0,
+                }));
+                node_ids.iter().copied().for_each(|node_id| {
+                    document.set_custom_widget(node_id, Box::new(VideoWidget::new(source.clone())));
+                });
+                Some(source)
             })
-            .collect::<Vec<Option<VideoNode>>>()
+            .collect::<Vec<Option<Arc<Mutex<VideoSource>>>>>()
             .try_into()
             .unwrap();
 
-        let renderer = AnyRender::new(width, height);
+        let renderer = VelloImageRenderer::new(width, height);
         Self {
             width,
             height,
             document,
             renderer,
-            video_nodes,
-            video_node_index: 0, // We populated special_data with the 0th image buffer
+            video_sources,
         }
     }
 
     fn update(&mut self, time: f64, inframes: [&[u8]; S], outframe: &mut [u8]) {
-        self.video_node_index = (self.video_node_index + 1) % 2;
-        self.video_nodes
-            .iter_mut()
+        self.video_sources
+            .iter()
             .zip(inframes)
-            .filter_map(|(video_node, inframe)| {
-                video_node.as_mut().map(|video_node| (video_node, inframe))
-            })
-            .for_each(|((video_node_ids, frames), inframe)| {
-                Arc::get_mut(&mut frames[self.video_node_index])
-                    .unwrap()
-                    .copy_from_slice(inframe);
-                video_node_ids.iter().copied().for_each(|node_id| {
-                    // Safe to unwrap since we verified all this when contructing
-                    let raster_data = self
-                        .document
-                        .get_node_mut(node_id)
-                        .unwrap()
-                        .element_data_mut()
-                        .unwrap()
-                        .raster_image_data_mut()
-                        .unwrap();
-                    raster_data.data = Blob::new(frames[self.video_node_index].clone());
-                });
+            .filter_map(|(source, inframe)| source.as_ref().map(|source| (source, inframe)))
+            .for_each(|(source, inframe)| {
+                let mut source = source.lock().unwrap();
+                source.staging.copy_from_slice(inframe);
+                source.generation = source.generation.wrapping_add(1);
             });
         self.document.resolve(time);
         self.renderer.render(
@@ -191,6 +351,22 @@ mod tests {
             output.as_flat_samples_mut().image_mut_slice().unwrap(),
         );
         assert_reference(reference_file, output);
+    }
+
+    #[test]
+    fn object_fit_contain_fills_box() {
+        assert_eq!(
+            compute_object_fit((200.0, 200.0), (320.0, 240.0), ObjectFit::Contain),
+            (200.0, 150.0)
+        );
+        assert_eq!(
+            compute_object_fit((200.0, 200.0), (320.0, 240.0), ObjectFit::Fill),
+            (200.0, 200.0)
+        );
+        assert_eq!(
+            compute_object_fit((200.0, 200.0), (320.0, 240.0), ObjectFit::None),
+            (320.0, 240.0)
+        );
     }
 
     #[test]

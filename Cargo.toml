@@ -35,3 +35,9 @@ cast_possible_truncation = "allow"
 multiple_crate_versions = "allow"
 missing_panics_doc = "allow"
 must_use_candidate = "allow"
+
+[patch.crates-io]
+anyrender = { git = "https://github.com/rectalogic/anyrender.git", branch = "image-widget-0.14" }
+anyrender_vello = { git = "https://github.com/rectalogic/anyrender.git", branch = "image-widget-0.14" }
+anyrender_svg = { git = "https://github.com/rectalogic/anyrender.git", branch = "image-widget-0.14" }
+wgpu_context = { git = "https://github.com/rectalogic/anyrender.git", branch = "image-widget-0.14" }

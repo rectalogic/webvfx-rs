@@ -12,10 +12,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        features:
-          - "--features anyrender_vello"
-          - "--features anyrender_vello_cpu"
-          - "--features anyrender_skia"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -35,11 +31,10 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Check with features ${{ matrix.features }}
-        run: cargo check --locked --workspace --no-default-features ${{ matrix.features }}
+      - name: Check
+        run: cargo check --locked --workspace --no-default-features
 
   fmt:
     name: Format
@@ -81,7 +76,6 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run clippy
@@ -92,10 +86,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        features:
-          # - "--features anyrender_vello"
-          - "--features anyrender_vello_cpu"
-          # - "--features anyrender_skia"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -115,8 +105,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run tests with features ${{ matrix.features }}
-        run: cargo test --locked --workspace --no-default-features ${{ matrix.features }}
+        run: cargo test --locked --workspace --no-default-features
