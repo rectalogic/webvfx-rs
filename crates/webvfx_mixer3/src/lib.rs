@@ -33,7 +33,7 @@ mod tests {
                 output.as_mut_ptr(),
             );
         }
-        assert_output("mixer3-1.png", &output);
+        assert_output("mixer3-1.png", &output).unwrap();
         f0r_destruct(plugin);
     }
 }

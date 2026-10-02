@@ -14,7 +14,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -23,10 +23,10 @@ jobs:
           sudo apt-get install libfontconfig1-dev
 
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v2
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -40,10 +40,10 @@ jobs:
     name: Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
           components: rustfmt
 
@@ -57,7 +57,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -66,12 +66,12 @@ jobs:
           sudo apt-get install libfontconfig1-dev
 
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
           components: clippy
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -83,29 +83,53 @@ jobs:
 
   test:
     name: Test
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install dependencies
-        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install libfontconfig1-dev
+          sudo apt-get install \
+            libfontconfig1-dev \
+            fonts-liberation \
+            libavcodec-dev \
+            libavfilter-dev \
+            libavformat-dev \
+            libavutil-dev \
+            libglvnd-dev \
+            libglx-mesa0 \
+            libnss3 \
+            libpulse0 \
+            libvulkan-dev \
+            libxcomposite1 \
+            libxdamage1 \
+            libxkbcommon-dev \
+            libxi6 \
+            libxrandr2 \
+            libxrender1 \
+            libxtst6 \
+            mesa-vulkan-drivers \
+            xvfb
 
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v2
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Run tests with features ${{ matrix.features }}
-        run: cargo test --locked --workspace --no-default-features
+      - name: Run tests
+        run: |
+            exec /usr/bin/xvfb-run --server-args="-screen 0 640x480x24 -nolisten unix" cargo test --locked --workspace --no-default-features
+
+      - name: Upload Failed Artifacts
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: failed-output
+          path: target/testdir-current

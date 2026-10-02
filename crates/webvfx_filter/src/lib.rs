@@ -22,7 +22,7 @@ mod tests {
         let mut output = vec![0u32; (WIDTH * HEIGHT) as usize];
         let inframe = read_image_u32("a-320x240.png");
         unsafe { f0r_update(plugin, 0.0, inframe.as_ptr(), output.as_mut_ptr()) };
-        assert_output("filter-1.png", &output);
+        assert_output("filter-1.png", &output).unwrap();
         f0r_destruct(plugin);
     }
 }

@@ -21,7 +21,7 @@ mod tests {
         f0r_set_param_value(plugin, html_param, 0);
         let mut output = vec![0u32; (WIDTH * HEIGHT) as usize];
         unsafe { f0r_update(plugin, 0.0, ptr::null::<u32>(), output.as_mut_ptr()) };
-        assert_output("source-1.png", &output);
+        assert_output("source-1.png", &output).unwrap();
         f0r_destruct(plugin);
     }
 }

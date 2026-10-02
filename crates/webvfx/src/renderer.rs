@@ -33,10 +33,6 @@ struct VideoSource {
 }
 
 /// A Blitz custom widget that draws the current video frame from a WGPU texture.
-///
-/// Rendering the frame through a widget-owned texture avoids handing the
-/// frame buffer to Vello as an `ImageData`, so Vello's image cache never
-/// retains the plugin's frame buffers.
 struct VideoWidget {
     source: Arc<Mutex<VideoSource>>,
     handle: Option<wgpu_context::DeviceHandle>,
@@ -315,7 +311,9 @@ mod tests {
     use crate::process_template;
 
     use super::*;
-    use test_support::{HEIGHT, RgbaImage, WIDTH, assert_reference, read_image, testdata};
+    use test_support::{
+        HEIGHT, ImageDiffError, RgbaImage, WIDTH, assert_reference, read_image, testdata,
+    };
 
     fn init_renderer<const S: usize>(
         html_file: &str,
@@ -337,7 +335,7 @@ mod tests {
         inframe_paths: [&Path; S],
         output: &mut RgbaImage,
         reference_file: &str,
-    ) {
+    ) -> Result<(), ImageDiffError> {
         let inframes = inframe_paths.map(read_image);
         let inframe_refs: [&[u8]; S] = inframes
             .iter()
@@ -350,7 +348,12 @@ mod tests {
             inframe_refs,
             output.as_flat_samples_mut().image_mut_slice().unwrap(),
         );
-        assert_reference(reference_file, output);
+        assert_reference(reference_file, output)
+    }
+
+    fn process_results(results: impl Iterator<Item = Result<(), ImageDiffError>>) {
+        let errors: Vec<ImageDiffError> = results.filter_map(Result::err).collect();
+        assert!(errors.is_empty(), "Errors: {errors:#?}");
     }
 
     #[test]
@@ -372,111 +375,126 @@ mod tests {
     #[test]
     fn test_source() {
         let (mut r, mut output) = init_renderer::<0>("source.html", None);
-        render(0.0, &mut r, [], &mut output, "source-1.png");
+        render(0.0, &mut r, [], &mut output, "source-1.png").unwrap();
     }
 
     #[test]
     fn test_source_template() {
         let (mut r, mut output) =
             init_renderer::<0>("source-template.html", Some("source-template.json"));
-        render(0.0, &mut r, [], &mut output, "source-template-1.png");
+        render(0.0, &mut r, [], &mut output, "source-template-1.png").unwrap();
     }
 
     #[test]
     fn test_filter() {
         let (mut r, mut output) = init_renderer::<1>("filter.html", None);
-        render(
-            0.0,
-            &mut r,
-            [&testdata!().join("a-320x240.png")],
-            &mut output,
-            "filter-1.png",
-        );
-        render(
-            1.0,
-            &mut r,
-            [&testdata!().join("b-320x240.png")],
-            &mut output,
-            "filter-2.png",
-        );
-        render(
-            2.0,
-            &mut r,
-            [&testdata!().join("a-320x240.png")],
-            &mut output,
-            "filter-3.png",
+        process_results(
+            [
+                render(
+                    0.0,
+                    &mut r,
+                    [&testdata!().join("a-320x240.png")],
+                    &mut output,
+                    "filter-1.png",
+                ),
+                render(
+                    1.0,
+                    &mut r,
+                    [&testdata!().join("b-320x240.png")],
+                    &mut output,
+                    "filter-2.png",
+                ),
+                render(
+                    2.0,
+                    &mut r,
+                    [&testdata!().join("a-320x240.png")],
+                    &mut output,
+                    "filter-3.png",
+                ),
+            ]
+            .into_iter(),
         );
     }
 
     #[test]
     fn test_mixer2() {
         let (mut r, mut output) = init_renderer::<2>("mixer2.html", None);
-        render(
-            0.0,
-            &mut r,
+        process_results(
             [
-                &testdata!().join("a-320x240.png"),
-                &testdata!().join("b-320x240.png"),
-            ],
-            &mut output,
-            "mixer2-1.png",
-        );
-        render(
-            1.0,
-            &mut r,
-            [
-                &testdata!().join("b-320x240.png"),
-                &testdata!().join("a-320x240.png"),
-            ],
-            &mut output,
-            "mixer2-2.png",
-        );
-        render(
-            2.0,
-            &mut r,
-            [
-                &testdata!().join("a-320x240.png"),
-                &testdata!().join("b-320x240.png"),
-            ],
-            &mut output,
-            "mixer2-3.png",
+                render(
+                    0.0,
+                    &mut r,
+                    [
+                        &testdata!().join("a-320x240.png"),
+                        &testdata!().join("b-320x240.png"),
+                    ],
+                    &mut output,
+                    "mixer2-1.png",
+                ),
+                render(
+                    1.0,
+                    &mut r,
+                    [
+                        &testdata!().join("b-320x240.png"),
+                        &testdata!().join("a-320x240.png"),
+                    ],
+                    &mut output,
+                    "mixer2-2.png",
+                ),
+                render(
+                    2.0,
+                    &mut r,
+                    [
+                        &testdata!().join("a-320x240.png"),
+                        &testdata!().join("b-320x240.png"),
+                    ],
+                    &mut output,
+                    "mixer2-3.png",
+                ),
+            ]
+            .into_iter(),
         );
     }
 
     fn test_mixer3_base(html_file: &str, reference_files: [&str; 3]) {
         let (mut r, mut output) = init_renderer::<3>(html_file, None);
-        render(
-            0.0,
-            &mut r,
+        process_results(
             [
-                &testdata!().join("a-320x240.png"),
-                &testdata!().join("b-320x240.png"),
-                &testdata!().join("c-320x240.png"),
-            ],
-            &mut output,
-            reference_files[0],
-        );
-        render(
-            1.0,
-            &mut r,
-            [
-                &testdata!().join("c-320x240.png"),
-                &testdata!().join("a-320x240.png"),
-                &testdata!().join("b-320x240.png"),
-            ],
-            &mut output,
-            reference_files[1],
-        );
-        render(
-            3.0,
-            &mut r,
-            [
-                &testdata!().join("b-320x240.png"),
-                &testdata!().join("c-320x240.png"),
-                &testdata!().join("a-320x240.png"),
-            ],
-            &mut output,
-            reference_files[2],
+                render(
+                    0.0,
+                    &mut r,
+                    [
+                        &testdata!().join("a-320x240.png"),
+                        &testdata!().join("b-320x240.png"),
+                        &testdata!().join("c-320x240.png"),
+                    ],
+                    &mut output,
+                    reference_files[0],
+                ),
+                render(
+                    1.0,
+                    &mut r,
+                    [
+                        &testdata!().join("c-320x240.png"),
+                        &testdata!().join("a-320x240.png"),
+                        &testdata!().join("b-320x240.png"),
+                    ],
+                    &mut output,
+                    reference_files[1],
+                ),
+                render(
+                    3.0,
+                    &mut r,
+                    [
+                        &testdata!().join("b-320x240.png"),
+                        &testdata!().join("c-320x240.png"),
+                        &testdata!().join("a-320x240.png"),
+                    ],
+                    &mut output,
+                    reference_files[2],
+                ),
+            ]
+            .into_iter(),
         );
     }
 

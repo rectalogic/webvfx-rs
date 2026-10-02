@@ -1,15 +1,37 @@
-use std::path::Path;
-
 use image::ImageReader;
 pub use image::RgbaImage;
+use std::{
+    env::consts,
+    error::Error,
+    ffi::CString,
+    fmt,
+    path::{Path, PathBuf},
+};
 use testdir::testdir;
-
-use std::ffi::CString;
 
 pub const WIDTH: u32 = 320;
 pub const HEIGHT: u32 = 240;
 
 pub const TEST_ROOT: &str = env!("CARGO_MANIFEST_DIR");
+
+#[derive(Debug)]
+pub struct ImageDiffError {
+    pub reference_file: PathBuf,
+    pub failed_file: PathBuf,
+}
+
+impl fmt::Display for ImageDiffError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Reference image {} differs, render saved to {}",
+            self.reference_file.display(),
+            self.failed_file.display()
+        )
+    }
+}
+
+impl Error for ImageDiffError {}
 
 #[macro_export]
 macro_rules! testdata {
@@ -25,33 +47,39 @@ pub fn read_image(path: &Path) -> Vec<u8> {
     }
 }
 
-pub fn assert_reference(reference_file: &str, output: &RgbaImage) {
-    let reference_file = testdata!().join("output").join(reference_file);
-    let fail_path = testdir!().join(reference_file.file_name().unwrap());
+#[expect(clippy::missing_errors_doc)]
+pub fn assert_reference(reference_file: &str, output: &RgbaImage) -> Result<(), ImageDiffError> {
+    let reference_file = testdata!()
+        .join("output")
+        .join(consts::OS)
+        .join(reference_file);
+    let failed_file = testdir!(ModuleScope).join(reference_file.file_name().unwrap());
     if reference_file.exists() {
         if output.as_flat_samples().image_slice().unwrap() != read_image(&reference_file).as_slice()
         {
-            output.save(&fail_path).unwrap();
-            panic!(
-                "Reference image differs, render saved to {}",
-                fail_path.display()
-            );
+            output.save(&failed_file).unwrap();
+            return Err(ImageDiffError {
+                reference_file,
+                failed_file,
+            });
         }
     } else {
-        output.save(&fail_path).unwrap();
+        output.save(&failed_file).unwrap();
         panic!(
             "Reference '{}' not found, render saved to '{}'",
             reference_file.display(),
-            fail_path.display()
+            failed_file.display()
         );
     }
+    Ok(())
 }
 
 pub fn param_cstring(filename: &str) -> CString {
     CString::new(testdata!().join(filename).to_str().unwrap()).unwrap()
 }
 
-pub fn assert_output(reference_file: &str, output: &Vec<u32>) {
+#[expect(clippy::missing_errors_doc)]
+pub fn assert_output(reference_file: &str, output: &Vec<u32>) -> Result<(), ImageDiffError> {
     let output_slice = output.as_slice();
     let bytes = unsafe {
         std::slice::from_raw_parts(
@@ -60,7 +88,7 @@ pub fn assert_output(reference_file: &str, output: &Vec<u32>) {
         )
     };
     let output = RgbaImage::from_raw(WIDTH, HEIGHT, bytes.into()).unwrap();
-    assert_reference(reference_file, &output);
+    assert_reference(reference_file, &output)
 }
 
 pub fn read_image_u32(filename: &str) -> Vec<u32> {
