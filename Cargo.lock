@@ -1841,6 +1841,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "image-compare"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "176623a137baf75908084aff53578d6336cbd932bffaf12fabe26b343eb13338"
+dependencies = [
+ "image",
+ "itertools",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "image-webp"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4169,6 +4181,7 @@ version = "0.1.0"
 dependencies = [
  "cfg-if",
  "image",
+ "image-compare",
  "testdir",
  "webvfx",
 ]

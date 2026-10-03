@@ -18,15 +18,17 @@ pub const TEST_ROOT: &str = env!("CARGO_MANIFEST_DIR");
 pub struct ImageDiffError {
     pub reference_file: PathBuf,
     pub failed_file: PathBuf,
+    pub diff_file: PathBuf,
 }
 
 impl fmt::Display for ImageDiffError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Reference image {} differs, render saved to {}",
+            "Reference image `{}` differs, render saved to `{}`, diff saved to `{}`",
             self.reference_file.display(),
-            self.failed_file.display()
+            self.failed_file.display(),
+            self.diff_file.display(),
         )
     }
 }
@@ -55,12 +57,21 @@ pub fn assert_reference(reference_file: &str, output: &RgbaImage) -> Result<(), 
         .join(reference_file);
     let failed_file = testdir!(ModuleScope).join(reference_file.file_name().unwrap());
     if reference_file.exists() {
-        if output.as_flat_samples().image_slice().unwrap() != read_image(&reference_file).as_slice()
-        {
+        let mut diff_file = testdir!(ModuleScope).join(reference_file.file_name().unwrap());
+        diff_file.set_extension("diff.png");
+        let reference_image = image::open(&reference_file).unwrap().into_rgba8();
+        let compare_result = image_compare::rgba_hybrid_compare(&reference_image, output).unwrap();
+        if compare_result.score < 1.0 {
             output.save(&failed_file).unwrap();
+            compare_result
+                .image
+                .to_color_map()
+                .save(&diff_file)
+                .unwrap();
             return Err(ImageDiffError {
                 reference_file,
                 failed_file,
+                diff_file,
             });
         }
     } else {

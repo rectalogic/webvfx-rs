@@ -20,6 +20,7 @@ anyrender_skia = []
 testdir = "0.10.0"
 cfg-if = { workspace = true }
 image = { version = "0.25", default-features = false, features = ["png"] }  # Version required by blitz-dom
+image-compare = "0.5.0"
 webvfx = { path = "../webvfx" }
 
 [lints]
