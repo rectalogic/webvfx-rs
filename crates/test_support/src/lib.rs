@@ -16,19 +16,21 @@ pub const TEST_ROOT: &str = env!("CARGO_MANIFEST_DIR");
 
 #[derive(Debug)]
 pub struct ImageDiffError {
-    pub reference_file: PathBuf,
-    pub failed_file: PathBuf,
-    pub diff_file: PathBuf,
+    reference_file: PathBuf,
+    failed_file: PathBuf,
+    diff_file: PathBuf,
+    similarity: f64,
 }
 
 impl fmt::Display for ImageDiffError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Reference image `{}` differs, render saved to `{}`, diff saved to `{}`",
+            "Reference image `{}` differs, render saved to `{}`, diff saved to `{}`. Similarity {}",
             self.reference_file.display(),
             self.failed_file.display(),
             self.diff_file.display(),
+            self.similarity
         )
     }
 }
@@ -72,6 +74,7 @@ pub fn assert_reference(reference_file: &str, output: &RgbaImage) -> Result<(), 
                 reference_file,
                 failed_file,
                 diff_file,
+                similarity: compare_result.score,
             });
         }
     } else {
