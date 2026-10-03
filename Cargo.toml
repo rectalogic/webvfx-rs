@@ -40,4 +40,3 @@ must_use_candidate = "allow"
 anyrender = { git = "https://github.com/rectalogic/anyrender.git", branch = "image-widget-0.14" }
 anyrender_vello = { git = "https://github.com/rectalogic/anyrender.git", branch = "image-widget-0.14" }
 anyrender_svg = { git = "https://github.com/rectalogic/anyrender.git", branch = "image-widget-0.14" }
-wgpu_context = { git = "https://github.com/rectalogic/anyrender.git", branch = "image-widget-0.14" }

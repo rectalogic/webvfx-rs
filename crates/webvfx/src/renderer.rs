@@ -4,7 +4,7 @@
 use std::sync::{Arc, Mutex};
 
 use anyrender::{ImageRenderer, PaintScene};
-use anyrender_vello::VelloImageRenderer;
+use anyrender_vello::{DeviceHandle, VelloImageRenderer, wgpu};
 use blitz_dom::{DocumentConfig, IntrinsicSizes, Widget, node::ComputedStyles};
 use blitz_html::HtmlDocument;
 use blitz_paint::paint_scene;
@@ -35,7 +35,7 @@ struct VideoSource {
 /// A Blitz custom widget that draws the current video frame from a WGPU texture.
 struct VideoWidget {
     source: Arc<Mutex<VideoSource>>,
-    handle: Option<wgpu_context::DeviceHandle>,
+    handle: Option<DeviceHandle>,
     texture: Option<wgpu::Texture>,
     resource: Option<anyrender::ResourceId>,
     uploaded_generation: Option<u64>,
@@ -57,7 +57,7 @@ impl Widget for VideoWidget {
     fn can_create_surfaces(&mut self, render_ctx: &mut dyn anyrender::RenderContext) {
         let Some(handle) = render_ctx
             .renderer_specific_context()
-            .and_then(|ctx| ctx.downcast::<wgpu_context::DeviceHandle>().ok())
+            .and_then(|ctx| ctx.downcast::<DeviceHandle>().ok())
             .map(|handle| *handle)
         else {
             return;

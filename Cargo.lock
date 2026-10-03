@@ -5013,8 +5013,6 @@ dependencies = [
  "tera",
  "test_support",
  "tracing-subscriber",
- "wgpu",
- "wgpu_context",
  "winit",
 ]
 

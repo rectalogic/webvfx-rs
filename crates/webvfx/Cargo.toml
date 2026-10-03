@@ -23,8 +23,6 @@ anyrender = "0.13.0"
 anyrender_vello = { version = "0.14.0", default-features = false }
 peniko = "0.6"
 style = { version = "0.21.0", package = "stylo" }
-wgpu = "29"
-wgpu_context = "0.9"
 winit = { version = "=0.31.0-beta.3" } # match blitz requirement
 argh = "0.1"
 serde_json = "1.0.145"
