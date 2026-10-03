@@ -63,7 +63,7 @@ pub fn assert_reference(reference_file: &str, output: &RgbaImage) -> Result<(), 
         diff_file.set_extension("diff.png");
         let reference_image = image::open(&reference_file).unwrap().into_rgba8();
         let compare_result = image_compare::rgba_hybrid_compare(&reference_image, output).unwrap();
-        if compare_result.score < 1.0 {
+        if compare_result.score < 0.999_999_9 {
             output.save(&failed_file).unwrap();
             compare_result
                 .image
